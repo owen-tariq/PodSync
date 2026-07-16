@@ -124,8 +124,6 @@ void gpod_track_set_extended_info(Itdb_Track *track, gint32 tracklen, gint32 siz
     track->track_nr = track_nr;
     track->cd_nr = cd_nr;
     track->visible = 1;
-    track->visible = 1;
-    track->mediatype = 1; // 1 = Audio
 }
 
 // Structs for list iteration
@@ -158,6 +156,10 @@ void gpod_track_set_mediatype(Itdb_Track *track, guint32 mediatype) {
         track->remember_playback_position = 1;
         track->skip_when_shuffling = 1;
     }
+}
+
+guint32 gpod_track_get_mediatype(Itdb_Track *track) {
+    return track ? track->mediatype : 1;
 }
 
 void gpod_ensure_sysinfo_artwork_formats(Itdb_iTunesDB *itdb) {
