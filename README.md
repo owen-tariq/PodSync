@@ -12,6 +12,7 @@ I created PodSync because I believe that keeping classic hardware alive shouldn'
 
 ## Features
 - ✨ **True Drag-and-Drop Syncing:** Forget about confusing menus! Just grab a folder of music from your Mac, drag it directly into the iPod's library inside PodSync, and watch it sync instantly.
+- 🎵 **FLAC to MP3/AAC Conversion:** iPods don't natively play FLAC files. PodSync automatically detects FLAC files when you drop them and beautifully converts them into high-quality, iPod-compatible formats (MP3/AAC) with full metadata preservation, so your iPod can play them right out of the gate!
 - **Native macOS Interface:** Built entirely with SwiftUI for a seamless, modern macOS experience.
 - **Duplicate Detection:** Smartly detects if songs are already on your device before syncing.
 - **Last.fm Integration:** Automatically extracts your play history from the iPod and scrobbles it to Last.fm.
