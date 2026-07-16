@@ -177,6 +177,14 @@ struct ContentView: View {
             DeviceSongsView(mediaType: 4)
         case .deviceAudiobooks:
             DeviceSongsView(mediaType: 8)
+        case .deviceAlbums:
+            DeviceAlbumsView()
+        case .deviceArtists:
+            DeviceArtistsView()
+        case .playlists:
+            Text("Playlists") // placeholder
+        case .playlistDetail(let id):
+            Text("Playlist \(id)") // placeholder
         case .lastfm:
             ScrobblerView()
         case .none:
