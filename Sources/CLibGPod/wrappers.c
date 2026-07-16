@@ -139,6 +139,16 @@ struct _MyItdb_iTunesDB {
   struct _MyGList *tracks;
 };
 
+void gpod_track_set_filetype(Itdb_Track *track, const char *filetype) {
+    if (!track) return;
+    if (track->filetype) free(track->filetype);
+    track->filetype = filetype ? strdup(filetype) : NULL;
+}
+
+void gpod_ensure_sysinfo_artwork_formats(Itdb_iTunesDB *itdb) {
+    // Stub - removed as it crashed
+}
+
 void** gpod_get_all_tracks(Itdb_iTunesDB *itdb, uint32_t *count) {
     if (!itdb) {
         *count = 0;
