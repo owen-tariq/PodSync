@@ -109,7 +109,7 @@ struct DeviceView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                Text("\(deviceManager.ipodManager.deviceTracks.count) tracks · \(ipod.usedCapacityFormatted) used of \(ipod.totalCapacityFormatted)")
+                Text("\(computeStatsString()) · \(ipod.usedCapacityFormatted) used of \(ipod.totalCapacityFormatted)")
                     .font(.headline)
                     .foregroundColor(.secondary)
             }
@@ -134,7 +134,7 @@ struct DeviceView: View {
                             checkForDuplicatesAndSync(ipod: ipod)
                         }
                     } label: {
-                        Label("Sync Music", systemImage: "arrow.triangle.2.circlepath")
+                        Label("Sync iPod", systemImage: "arrow.triangle.2.circlepath")
                             .font(.title3)
                             .fontWeight(.semibold)
                             .padding(.horizontal, 24)
@@ -290,5 +290,27 @@ struct DeviceView: View {
     
     private func addMusicFolder() {
         libraryManager.addLibraryFolder()
+    }
+    
+    // MARK: - Helpers
+    
+    private func computeStatsString() -> String {
+        let tracks = deviceManager.ipodManager.deviceTracks
+        let songs = tracks.filter { $0.ipodMediaType == 1 || $0.ipodMediaType == 0 }.count
+        let movies = tracks.filter { $0.ipodMediaType == 2 || $0.ipodMediaType == 32 || $0.ipodMediaType == 64 }.count
+        let podcasts = tracks.filter { $0.ipodMediaType == 4 }.count
+        let audiobooks = tracks.filter { $0.ipodMediaType == 8 }.count
+        
+        var components: [String] = []
+        if songs > 0 { components.append("\(songs) \(songs == 1 ? "song" : "songs")") }
+        if movies > 0 { components.append("\(movies) \(movies == 1 ? "movie" : "movies")") }
+        if podcasts > 0 { components.append("\(podcasts) \(podcasts == 1 ? "podcast" : "podcasts")") }
+        if audiobooks > 0 { components.append("\(audiobooks) \(audiobooks == 1 ? "audiobook" : "audiobooks")") }
+        
+        if components.isEmpty {
+            return "0 tracks"
+        }
+        
+        return components.joined(separator: ", ")
     }
 }
