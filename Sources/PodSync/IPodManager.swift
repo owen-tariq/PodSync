@@ -48,6 +48,9 @@ class IPodManager: ObservableObject {
             
             print("[IPodManager] Successfully opened iPod at \(mountpoint)")
             
+            // Ensure cryptographic hashes are correctly generated so the iPod Classic does not skip tracks
+            gpod_ensure_hash_info(validDB)
+            
             // Build tracks array in background
             var newTracks: [TrackModel] = []
             var count: UInt32 = 0
