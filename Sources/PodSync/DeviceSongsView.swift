@@ -135,9 +135,13 @@ struct DeviceSongsView: View {
     
     private var statsBar: some View {
         HStack(spacing: 4) {
-            let trackCount = ipodManager.deviceTracks.count
+            let trackCount = filteredTracks.count
+            let typeName = mediaType == 2 ? (trackCount == 1 ? "movie" : "movies") :
+                           (mediaType == 4 ? (trackCount == 1 ? "podcast" : "podcasts") :
+                           (mediaType == 8 ? (trackCount == 1 ? "audiobook" : "audiobooks") :
+                           (trackCount == 1 ? "song" : "songs")))
             
-            Text("\(trackCount) tracks")
+            Text("\(trackCount) \(typeName)")
                 .fontWeight(.medium)
             
             if let ipod = deviceManager.connectedIPod {
@@ -256,7 +260,17 @@ struct DeviceSongsView: View {
     // MARK: - Filtering
     
     private var filteredTracks: [TrackModel] {
-        let tracks = ipodManager.deviceTracks.filter { $0.ipodMediaType == self.mediaType }
+        let tracks = ipodManager.deviceTracks.filter { track in
+            if self.mediaType == 2 {
+                return track.ipodMediaType == 2 || track.ipodMediaType == 32 || track.ipodMediaType == 64
+            } else if self.mediaType == 4 {
+                return track.ipodMediaType == 4
+            } else if self.mediaType == 8 {
+                return track.ipodMediaType == 8
+            } else {
+                return track.ipodMediaType == 1 || track.ipodMediaType == 0
+            }
+        }
         guard !searchText.isEmpty else { return tracks }
         return tracks.filter { track in
             (track.title?.localizedCaseInsensitiveContains(searchText) == true) ||
