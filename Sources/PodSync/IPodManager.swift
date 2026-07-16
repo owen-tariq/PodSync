@@ -195,10 +195,15 @@ class IPodManager: ObservableObject {
         
         // Add artwork if provided (MUST BE AFTER itdb_track_add so track->itdb is valid!)
         if let data = artworkData {
-            data.withUnsafeBytes { rawBufferPointer in
-                if let baseAddress = rawBufferPointer.baseAddress {
-                    gpod_track_set_artwork_from_data(track, baseAddress, data.count)
+            let tempArtworkURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString).appendingPathExtension("jpg")
+            do {
+                try data.write(to: tempArtworkURL)
+                tempArtworkURL.path.withCString { cPath in
+                    itdb_track_set_thumbnails(track, cPath)
                 }
+                try FileManager.default.removeItem(at: tempArtworkURL)
+            } catch {
+                print("[IPodManager] Failed to write temp artwork: \(error)")
             }
         }
         
