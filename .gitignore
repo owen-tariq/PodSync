@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+build/
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+PodSync.app
+AppIcon.png
+AppIcon.iconset/
+crop_icon.py
