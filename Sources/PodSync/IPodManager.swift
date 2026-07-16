@@ -235,10 +235,31 @@ class IPodManager: ObservableObject {
         }
         
         let ext = URL(fileURLWithPath: filePath).pathExtension.lowercased()
-        let filetypeStr = (ext == "m4a") ? "m4a " : (ext == "mp3" ? "mp3 " : "m4a ")
+        
+        let filetypeStr: String
+        if ["mp4", "m4v", "mov"].contains(ext) {
+            filetypeStr = "mp4 "
+        } else if ext == "mp3" {
+            filetypeStr = "mp3 "
+        } else {
+            filetypeStr = "m4a "
+        }
         filetypeStr.withCString { cFiletype in
             gpod_track_set_filetype(track, cFiletype)
         }
+        
+        // 1=Audio, 2=Video, 4=Podcast, 8=Audiobook
+        let mediaType: UInt32
+        if ["mp4", "m4v", "mov"].contains(ext) {
+            mediaType = 2
+        } else if ext == "m4b" {
+            mediaType = 8
+        } else if ext == "m4p" {
+            mediaType = 4 // often used for podcast, though typically it's m4a + podcast flag. we'll use m4p or just default.
+        } else {
+            mediaType = 1
+        }
+        gpod_track_set_mediatype(track, mediaType)
         
         gpod_track_set_extended_info(
             track,

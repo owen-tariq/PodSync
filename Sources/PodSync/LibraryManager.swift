@@ -11,9 +11,8 @@ class LibraryManager: ObservableObject {
     @Published var scanProgress: Double = 0.0
     @Published var libraryPaths: [URL] = []
 
-    /// Audio file extensions supported by the scanner.
     nonisolated private static let supportedExtensions: Set<String> = [
-        "mp3", "m4a", "aac", "alac", "flac", "wav", "aiff", "ogg"
+        "mp3", "m4a", "m4b", "m4p", "mp4", "m4v", "mov", "aac", "alac", "flac", "wav", "aiff", "ogg"
     ]
 
     // MARK: - Public Methods
