@@ -15,50 +15,97 @@ class IPodManager: ObservableObject {
     private(set) var mountpoint: String?
     
     /// Parse an iPod database from a mounted iPod.
-    @discardableResult
-    func openIPod(at mountpoint: String) -> Bool {
+    /// Parse an iPod database from a mounted iPod on a background thread.
+    func openIPod(at mountpoint: String) {
         self.mountpoint = mountpoint
         
-        print("[IPodManager] Attempting to parse database at \(mountpoint)...")
+        print("[IPodManager] Attempting to parse database at \(mountpoint) in background...")
         
-        var rawDB = mountpoint.withCString { cString in
-            itdb_parse(cString, nil)
-        }
-        
-        if rawDB == nil {
-            print("[IPodManager] Database not found. Creating a new one.")
-            rawDB = itdb_new()
-            if let db = rawDB {
-                mountpoint.withCString { cString in
-                    itdb_set_mountpoint(db, cString)
-                }
-                let mpl = "iPod".withCString { cTitle in
-                    itdb_playlist_new(cTitle, 1)
-                }
-                itdb_playlist_set_mpl(mpl)
-                itdb_playlist_add(db, mpl, -1)
+        Task.detached(priority: .userInitiated) {
+            var rawDB = mountpoint.withCString { cString in
+                itdb_parse(cString, nil)
             }
-        }
-        
-        guard rawDB != nil else {
-            print("[IPodManager] Failed to parse or create iPod database at \(mountpoint)")
-            return false
-        }
-        
-        self.dbRaw = rawDB
-        print("[IPodManager] Successfully opened iPod at \(mountpoint)")
-        
-        // Ensure SysInfo artwork formats and hashes are correctly setup to prevent corrupt art and skipping
-        gpod_ensure_sysinfo_artwork_formats(rawDB)
-        gpod_ensure_hash_info(rawDB)
-        
-        reloadTracks()
-        
-        // Extract Last.fm history
-        if let rawDB = rawDB {
-            Task {
-                let currentPlaycounts = ScrobblerManager.shared.lastKnownPlaycounts
-                let newScrobbles = ScrobblerManager.extractHistoryBackground(from: rawDB, currentPlaycounts: currentPlaycounts)
+            
+            if rawDB == nil {
+                print("[IPodManager] Database not found. Creating a new one.")
+                rawDB = itdb_new()
+                if let db = rawDB {
+                    mountpoint.withCString { cString in
+                        itdb_set_mountpoint(db, cString)
+                    }
+                    let mpl = "iPod".withCString { cTitle in
+                        itdb_playlist_new(cTitle, 1)
+                    }
+                    itdb_playlist_set_mpl(mpl)
+                    itdb_playlist_add(db, mpl, -1)
+                }
+            }
+            
+            guard let validDB = rawDB else {
+                print("[IPodManager] Failed to parse or create iPod database at \(mountpoint)")
+                return
+            }
+            
+            print("[IPodManager] Successfully opened iPod at \(mountpoint)")
+            
+            // Build tracks array in background
+            var newTracks: [TrackModel] = []
+            var count: UInt32 = 0
+            
+            if let trackArray = gpod_get_all_tracks(validDB, &count) {
+                for i in 0..<Int(count) {
+                    guard let trackPtr = trackArray[i] else { continue }
+                    let track = OpaquePointer(trackPtr)
+                    
+                    let id = gpod_track_get_id_field(track)
+                    
+                    let titlePtr = gpod_track_get_title_field(track)
+                    let title = titlePtr != nil ? String(cString: titlePtr!) : "Unknown Track"
+                    
+                    let artistPtr = gpod_track_get_artist_field(track)
+                    let artist = artistPtr != nil ? String(cString: artistPtr!) : "Unknown Artist"
+                    
+                    let albumPtr = gpod_track_get_album_field(track)
+                    let album = albumPtr != nil ? String(cString: albumPtr!) : "Unknown Album"
+                    
+                    var absoluteURL: URL? = nil
+                    if let ipodPathPtr = gpod_track_get_ipod_path(track) {
+                        let ipodPathStr = String(cString: ipodPathPtr)
+                        let normalizedPath = ipodPathStr.replacingOccurrences(of: ":", with: "/")
+                        absoluteURL = URL(fileURLWithPath: mountpoint).appendingPathComponent(normalizedPath)
+                    }
+                    
+                    var tm = TrackModel(
+                        id: UUID(),
+                        filePath: absoluteURL ?? URL(fileURLWithPath: "/dev/null"),
+                        title: title,
+                        artist: artist,
+                        album: album,
+                        albumArtist: nil,
+                        genre: nil,
+                        year: nil,
+                        trackNumber: nil,
+                        discNumber: nil,
+                        duration: 0,
+                        fileSize: 0,
+                        fileFormat: "MP3",
+                        dateAdded: Date(),
+                        artworkData: nil
+                    )
+                    tm.ipodTrackId = id
+                    newTracks.append(tm)
+                }
+                gpod_free_track_array(trackArray)
+            }
+            
+            // Extract Last.fm history in background
+            let currentPlaycounts = await ScrobblerManager.shared.lastKnownPlaycounts
+            let newScrobbles = ScrobblerManager.extractHistoryBackground(from: validDB, currentPlaycounts: currentPlaycounts)
+            
+            // Commit to Main Actor
+            await MainActor.run {
+                self.dbRaw = validDB
+                self.deviceTracks = newTracks
                 
                 if !newScrobbles.isEmpty {
                     print("[IPodManager] Found \(newScrobbles.count) new scrobbles.")
@@ -66,8 +113,6 @@ class IPodManager: ObservableObject {
                 }
             }
         }
-        
-        return true
     }
     
     /// Reload tracks from the iPod database into deviceTracks
@@ -97,11 +142,9 @@ class IPodManager: ObservableObject {
             let albumPtr = gpod_track_get_album_field(track)
             let album = albumPtr != nil ? String(cString: albumPtr!) : "Unknown Album"
             
-            // Reconstruct absolute path
             var absoluteURL: URL? = nil
             if let ipodPathPtr = gpod_track_get_ipod_path(track) {
                 let ipodPathStr = String(cString: ipodPathPtr)
-                // Convert ":iPod_Control:Music:Fxx:file.mp3" to "/iPod_Control/Music/Fxx/file.mp3"
                 let normalizedPath = ipodPathStr.replacingOccurrences(of: ":", with: "/")
                 absoluteURL = URL(fileURLWithPath: mountpoint).appendingPathComponent(normalizedPath)
             }
@@ -199,15 +242,10 @@ class IPodManager: ObservableObject {
         
         // Add artwork if provided (MUST BE AFTER itdb_track_add so track->itdb is valid!)
         if let data = artworkData {
-            let tempArtworkURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString).appendingPathExtension("jpg")
-            do {
-                try data.write(to: tempArtworkURL)
-                tempArtworkURL.path.withCString { cPath in
-                    itdb_track_set_thumbnails(track, cPath)
+            data.withUnsafeBytes { rawBufferPointer in
+                if let baseAddress = rawBufferPointer.baseAddress {
+                    gpod_track_set_artwork_from_data(track, baseAddress, data.count)
                 }
-                try FileManager.default.removeItem(at: tempArtworkURL)
-            } catch {
-                print("[IPodManager] Failed to write temp artwork: \(error)")
             }
         }
         
