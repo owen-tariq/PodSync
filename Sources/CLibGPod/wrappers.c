@@ -145,6 +145,21 @@ void gpod_track_set_filetype(Itdb_Track *track, const char *filetype) {
     track->filetype = filetype ? strdup(filetype) : NULL;
 }
 
+void gpod_track_set_mediatype(Itdb_Track *track, guint32 mediatype) {
+    if (!track) return;
+    track->mediatype = mediatype;
+    
+    // Auto-set flags based on media type
+    if (mediatype == 2 || mediatype == 32 || mediatype == 64) {
+        track->has_video = 1;
+        track->movie_flag = 1;
+        track->remember_playback_position = 1;
+    } else if (mediatype == 8 || mediatype == 4) { // Audiobook or Podcast
+        track->remember_playback_position = 1;
+        track->skip_when_shuffling = 1;
+    }
+}
+
 void gpod_ensure_sysinfo_artwork_formats(Itdb_iTunesDB *itdb) {
     // Stub - removed as it crashed
 }

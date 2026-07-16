@@ -111,7 +111,7 @@ struct IPodDropTargetModifier: ViewModifier {
                 for case let fileURL as URL in enumerator {
                     if let isRegularFile = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile, isRegularFile {
                         let ext = fileURL.pathExtension.lowercased()
-                        if ext == "mp3" || ext == "m4a" {
+                        if ["mp3", "m4a", "m4b", "m4p", "mp4", "m4v", "mov"].contains(ext) {
                             others.append(fileURL)
                         } else if ext == "flac" {
                             flacs.append(fileURL)
@@ -120,7 +120,7 @@ struct IPodDropTargetModifier: ViewModifier {
                 }
             } else {
                 let ext = url.pathExtension.lowercased()
-                if ext == "mp3" || ext == "m4a" {
+                if ["mp3", "m4a", "m4b", "m4p", "mp4", "m4v", "mov"].contains(ext) {
                     others.append(url)
                 } else if ext == "flac" {
                     flacs.append(url)
