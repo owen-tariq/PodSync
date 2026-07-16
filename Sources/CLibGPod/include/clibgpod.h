@@ -115,6 +115,7 @@ extern char* g_strdup(const char *str);
 extern void gpod_track_set_title(Itdb_Track *track, const char *title);
 extern void gpod_track_set_artist(Itdb_Track *track, const char *artist);
 extern void gpod_track_set_album(Itdb_Track *track, const char *album);
+extern void gpod_track_set_filetype(Itdb_Track *track, const char *filetype);
 extern void gpod_track_set_artwork_from_data(Itdb_Track *track, const void *data, size_t length);
 extern int itdb_track_set_thumbnails(Itdb_Track *track, const char *filename);
 extern void gpod_ensure_sysinfo_artwork_formats(Itdb_iTunesDB *itdb);

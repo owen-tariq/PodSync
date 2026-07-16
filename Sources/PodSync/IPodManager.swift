@@ -234,6 +234,12 @@ class IPodManager: ObservableObject {
             gpod_track_set_album(track, cAlbum)
         }
         
+        let ext = URL(fileURLWithPath: filePath).pathExtension.lowercased()
+        let filetypeStr = (ext == "m4a") ? "m4a " : (ext == "mp3" ? "mp3 " : "m4a ")
+        filetypeStr.withCString { cFiletype in
+            gpod_track_set_filetype(track, cFiletype)
+        }
+        
         gpod_track_set_extended_info(
             track,
             Int32(duration * 1000),
