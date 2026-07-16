@@ -58,8 +58,11 @@ struct DeviceSongsView: View {
         .alert("Delete Selected Songs?", isPresented: $showDeleteSelectedConfirm) {
             Button("Cancel", role: .cancel) { }
             Button("Delete \(selectedTracks.count) Songs", role: .destructive) {
-                let _ = ipodManager.deleteTracks(ids: selectedTracks)
+                let idsToDelete = selectedTracks
                 selectedTracks.removeAll()
+                Task { @MainActor in
+                    let _ = ipodManager.deleteTracks(ids: idsToDelete)
+                }
             }
         } message: {
             Text("This will permanently delete \(selectedTracks.count) selected song(s) from your iPod.")
@@ -205,8 +208,11 @@ struct DeviceSongsView: View {
                 Divider()
                 
                 Button(role: .destructive) {
-                    let _ = ipodManager.deleteTracks(ids: selection)
+                    let idsToDelete = selection
                     selectedTracks.subtract(selection)
+                    Task { @MainActor in
+                        let _ = ipodManager.deleteTracks(ids: idsToDelete)
+                    }
                 } label: {
                     Label("Delete Track from iPod", systemImage: "trash")
                 }
