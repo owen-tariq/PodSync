@@ -17,6 +17,15 @@ I created PodSync because I believe that keeping classic hardware alive shouldn'
 - **Last.fm Integration:** Automatically extracts your play history from the iPod and scrobbles it to Last.fm.
 - **Open Source:** Free to use, inspect, and modify forever.
 
+## Screenshots
+<p align="center">
+  <img src="Screenshots/1.png" width="400" />
+  <img src="Screenshots/2.png" width="400" />
+  <img src="Screenshots/3.png" width="400" />
+  <img src="Screenshots/4.png" width="400" />
+  <img src="Screenshots/5.png" width="400" />
+</p>
+
 ## Requirements
 - macOS 13.0 or later
 - A classic iPod (e.g., iPod Classic, iPod Nano)
