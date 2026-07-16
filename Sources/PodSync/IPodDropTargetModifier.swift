@@ -228,8 +228,8 @@ struct IPodDropTargetModifier: ViewModifier {
                 if let cgImage = thumbnail?.cgImage {
                     let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
                     if let tiff = nsImage.tiffRepresentation, let bitmap = NSBitmapImageRep(data: tiff) {
-                        let pngData = bitmap.representation(using: .png, properties: [:])
-                        continuation.resume(returning: pngData)
+                        let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
+                        continuation.resume(returning: jpegData)
                         return
                     }
                 }
