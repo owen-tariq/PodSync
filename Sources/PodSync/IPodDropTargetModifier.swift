@@ -171,11 +171,11 @@ struct IPodDropTargetModifier: ViewModifier {
     @MainActor
     private func addSingleFileToIPod(url: URL, originalURL: URL? = nil) async {
         let sourceURL = originalURL ?? url
-        let targetAsset = AVAsset(url: url)
         
         var title: String = sourceURL.deletingPathExtension().lastPathComponent
         var artist: String = "Unknown Artist"
         var album: String = "Unknown Album"
+        var duration: Double = 0
         
         if let mdItem = MDItemCreateWithURL(nil, sourceURL as CFURL) {
             if let titleAttr = MDItemCopyAttribute(mdItem, kMDItemTitle) as? String {
@@ -187,6 +187,18 @@ struct IPodDropTargetModifier: ViewModifier {
             if let albumAttr = MDItemCopyAttribute(mdItem, kMDItemAlbum) as? String {
                 album = albumAttr
             }
+            if let durationAttr = MDItemCopyAttribute(mdItem, kMDItemDurationSeconds) as? Double {
+                duration = durationAttr
+            }
+        }
+        
+        // Fallback to AVAsset for duration if MDItem didn't provide it
+        if duration == 0 {
+            let targetAsset = AVAsset(url: url)
+            let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+            if !assetDuration.isNaN && !assetDuration.isInfinite {
+                duration = assetDuration
+            }
         }
         
         let artworkData = await getArtworkData(url: sourceURL)
@@ -197,7 +209,7 @@ struct IPodDropTargetModifier: ViewModifier {
             artist: artist,
             album: album,
             artworkData: artworkData,
-            duration: CMTimeGetSeconds(targetAsset.duration),
+            duration: duration,
             size: (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64) ?? 0,
             year: nil,
             trackNum: nil,
