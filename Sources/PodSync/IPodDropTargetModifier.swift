@@ -1,5 +1,7 @@
 import SwiftUI
 import AVFoundation
+import QuickLookThumbnailing
+import CoreServices
 
 struct IPodDropTargetModifier: ViewModifier {
     @EnvironmentObject var deviceManager: DeviceManager
@@ -36,10 +38,12 @@ struct IPodDropTargetModifier: ViewModifier {
                 }
                 Button(String(localized: "Cancel"), role: .cancel) {
                     // Sync the non-FLAC files anyway
-                    for file in otherFilesToSync {
-                        addSingleFileToIPod(url: file)
+                    Task { @MainActor in
+                        for file in otherFilesToSync {
+                            await addSingleFileToIPod(url: file)
+                        }
+                        ipodManager.save()
                     }
-                    ipodManager.save()
                 }
             } message: {
                 Text(String(localized: "You dropped \(flacFilesToConvert.count) FLAC file(s). iPods do not play FLAC files natively. Would you like to convert them to AAC (.m4a) for syncing?"))
@@ -129,10 +133,12 @@ struct IPodDropTargetModifier: ViewModifier {
             self.otherFilesToSync = others
             self.showingConversionPrompt = true
         } else {
-            for file in others {
-                addSingleFileToIPod(url: file)
+            Task { @MainActor in
+                for file in others {
+                    await addSingleFileToIPod(url: file)
+                }
+                ipodManager.save()
             }
-            ipodManager.save()
         }
     }
     
@@ -142,13 +148,13 @@ struct IPodDropTargetModifier: ViewModifier {
         
         Task { @MainActor in
             for file in otherFilesToSync {
-                addSingleFileToIPod(url: file)
+                await addSingleFileToIPod(url: file)
             }
             
             for flacURL in flacFilesToConvert {
                 do {
                     let m4aURL = try await AudioConverter.shared.convertToAAC(inputURL: flacURL, bitrate: bitrate)
-                    addSingleFileToIPod(url: m4aURL, originalURL: flacURL)
+                    await addSingleFileToIPod(url: m4aURL, originalURL: flacURL)
                 } catch {
                     print("Conversion failed for \(flacURL.lastPathComponent): \(error)")
                 }
@@ -163,25 +169,27 @@ struct IPodDropTargetModifier: ViewModifier {
     }
     
     @MainActor
-    private func addSingleFileToIPod(url: URL, originalURL: URL? = nil) {
-        let metadataAsset = AVAsset(url: originalURL ?? url)
+    private func addSingleFileToIPod(url: URL, originalURL: URL? = nil) async {
+        let sourceURL = originalURL ?? url
         let targetAsset = AVAsset(url: url)
         
-        let titleItem = AVMetadataItem.metadataItems(from: metadataAsset.commonMetadata, withKey: AVMetadataKey.commonKeyTitle, keySpace: .common).first
-        let artistItem = AVMetadataItem.metadataItems(from: metadataAsset.commonMetadata, withKey: AVMetadataKey.commonKeyArtist, keySpace: .common).first
-        let albumItem = AVMetadataItem.metadataItems(from: metadataAsset.commonMetadata, withKey: AVMetadataKey.commonKeyAlbumName, keySpace: .common).first
-        let artworkItem = AVMetadataItem.metadataItems(from: metadataAsset.commonMetadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common).first
+        var title: String = sourceURL.deletingPathExtension().lastPathComponent
+        var artist: String = "Unknown Artist"
+        var album: String = "Unknown Album"
         
-        let title = titleItem?.stringValue ?? (originalURL ?? url).deletingPathExtension().lastPathComponent
-        let artist = artistItem?.stringValue ?? "Unknown Artist"
-        let album = albumItem?.stringValue ?? "Unknown Album"
-        
-        var artworkData: Data? = nil
-        if let data = artworkItem?.dataValue {
-            artworkData = data
-        } else if let value = artworkItem?.value as? Data {
-            artworkData = value
+        if let mdItem = MDItemCreateWithURL(nil, sourceURL as CFURL) {
+            if let titleAttr = MDItemCopyAttribute(mdItem, kMDItemTitle) as? String {
+                title = titleAttr
+            }
+            if let authorsAttr = MDItemCopyAttribute(mdItem, kMDItemAuthors) as? [String], let firstAuthor = authorsAttr.first {
+                artist = firstAuthor
+            }
+            if let albumAttr = MDItemCopyAttribute(mdItem, kMDItemAlbum) as? String {
+                album = albumAttr
+            }
         }
+        
+        let artworkData = await getArtworkData(url: sourceURL)
         
         let success = ipodManager.addTrack(
             filePath: url.path,
@@ -198,6 +206,23 @@ struct IPodDropTargetModifier: ViewModifier {
         
         if success {
             print("Successfully added: \(title)")
+        }
+    }
+    
+    private func getArtworkData(url: URL) async -> Data? {
+        let request = QLThumbnailGenerator.Request(fileAt: url, size: CGSize(width: 500, height: 500), scale: 1.0, representationTypes: .thumbnail)
+        return await withCheckedContinuation { continuation in
+            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { thumbnail, error in
+                if let cgImage = thumbnail?.cgImage {
+                    let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+                    if let tiff = nsImage.tiffRepresentation, let bitmap = NSBitmapImageRep(data: tiff) {
+                        let pngData = bitmap.representation(using: .png, properties: [:])
+                        continuation.resume(returning: pngData)
+                        return
+                    }
+                }
+                continuation.resume(returning: nil)
+            }
         }
     }
 }
