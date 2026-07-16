@@ -48,6 +48,10 @@ class IPodManager: ObservableObject {
         self.dbRaw = rawDB
         print("[IPodManager] Successfully opened iPod at \(mountpoint)")
         
+        // Ensure SysInfo artwork formats and hashes are correctly setup to prevent corrupt art and skipping
+        gpod_ensure_sysinfo_artwork_formats(rawDB)
+        gpod_ensure_hash_info(rawDB)
+        
         reloadTracks()
         
         // Extract Last.fm history
