@@ -231,6 +231,11 @@ class IPodManager: ObservableObject {
         guard let trackPtr = foundTrackPtr else { return false }
         let track = OpaquePointer(trackPtr)
         
+        // Explicitly remove from Master Playlist to prevent dangling pointers in libgpod
+        if let mpl = itdb_playlist_mpl(dbRaw) {
+            itdb_playlist_remove_track(mpl, track)
+        }
+        
         // Remove from database
         gpod_track_remove(dbRaw, track)
         
