@@ -59,10 +59,15 @@ struct PodSyncApp: App {
 enum SidebarItem: Hashable {
     case library
     case albums
+    case playlists
     case devices
     case deviceSongs
     case deviceAlbums
     case deviceArtists
+    case deviceMovies
+    case devicePodcasts
+    case deviceAudiobooks
+    case playlistDetail(UUID)
     case lastfm
 }
 
@@ -121,13 +126,16 @@ struct ContentView: View {
                 if let ipod = deviceManager.connectedIPod {
                     DisclosureGroup(isExpanded: $isDeviceExpanded) {
                         NavigationLink(value: SidebarItem.deviceSongs) {
-                            Label("Songs", systemImage: "music.note")
+                            Label("Music", systemImage: "music.note")
                         }
-                        NavigationLink(value: SidebarItem.deviceAlbums) {
-                            Label("Albums", systemImage: "square.stack")
+                        NavigationLink(value: SidebarItem.deviceMovies) {
+                            Label("Movies", systemImage: "film")
                         }
-                        NavigationLink(value: SidebarItem.deviceArtists) {
-                            Label("Artists", systemImage: "music.mic")
+                        NavigationLink(value: SidebarItem.devicePodcasts) {
+                            Label("Podcasts", systemImage: "antenna.radiowaves.left.and.right")
+                        }
+                        NavigationLink(value: SidebarItem.deviceAudiobooks) {
+                            Label("Audiobooks", systemImage: "book")
                         }
                     } label: {
                         NavigationLink(value: SidebarItem.devices) {
@@ -162,11 +170,13 @@ struct ContentView: View {
         case .devices:
             DeviceView()
         case .deviceSongs:
-            DeviceSongsView()
-        case .deviceAlbums:
-            DeviceAlbumsView()
-        case .deviceArtists:
-            DeviceArtistsView()
+            DeviceSongsView(mediaType: 1)
+        case .deviceMovies:
+            DeviceSongsView(mediaType: 2)
+        case .devicePodcasts:
+            DeviceSongsView(mediaType: 4)
+        case .deviceAudiobooks:
+            DeviceSongsView(mediaType: 8)
         case .lastfm:
             ScrobblerView()
         case .none:

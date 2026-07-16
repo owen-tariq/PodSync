@@ -233,29 +233,30 @@ struct DeviceSongsView: View {
         }
     }
     
-    // MARK: - Empty State
-    
     private var emptyStateView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "music.note.list")
+            Image(systemName: mediaType == 2 ? "film" : (mediaType == 4 ? "antenna.radiowaves.left.and.right" : (mediaType == 8 ? "book" : "music.note.list")))
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
             
-            Text("No Songs on iPod")
+            let typeName = mediaType == 2 ? "Movies" : (mediaType == 4 ? "Podcasts" : (mediaType == 8 ? "Audiobooks" : "Songs"))
+            Text("No \(typeName) on iPod")
                 .font(.title2)
                 .fontWeight(.medium)
             
-            Text("Drag and drop music files here to add them,\nor use the Sync button in the Overview tab.")
+            Text("Drag and drop files here to add them,\nor use the Sync button in the Overview tab.")
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
+    var mediaType: UInt32 = 1 // 1=Audio, 2=Video, 4=Podcast, 8=Audiobook
+    
     // MARK: - Filtering
     
     private var filteredTracks: [TrackModel] {
-        let tracks = ipodManager.deviceTracks
+        let tracks = ipodManager.deviceTracks.filter { $0.ipodMediaType == self.mediaType }
         guard !searchText.isEmpty else { return tracks }
         return tracks.filter { track in
             (track.title?.localizedCaseInsensitiveContains(searchText) == true) ||
