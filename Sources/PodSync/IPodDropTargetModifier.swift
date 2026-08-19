@@ -30,6 +30,7 @@ struct IPodDropTargetModifier: ViewModifier {
     @AppStorage(PodSyncSettings.syncPlanEnabledKey) private var syncPlanEnabled: Bool = true
     @AppStorage(PodSyncSettings.conversionFormatKey) private var conversionFormatRaw: String = ConversionFormat.aac.rawValue
     @AppStorage(PodSyncSettings.conversionBitrateKey) private var conversionBitrateRaw: Int = AudioBitrate.kbps256.rawValue
+    @AppStorage(PodSyncSettings.artworkMaxSizeKey) private var artworkMaxSize: Int = 600
 
     @State private var plan: SyncPlan? = nil
     @State private var showPlanSheet = false
@@ -66,6 +67,7 @@ struct IPodDropTargetModifier: ViewModifier {
                         plan: plan,
                         formatRaw: $conversionFormatRaw,
                         bitrateRaw: $conversionBitrateRaw,
+                        artworkMaxSize: $artworkMaxSize,
                         onConfirm: {
                             showPlanSheet = false
                             executePlan(plan)
@@ -353,6 +355,7 @@ struct SyncPlanSheet: View {
     let plan: SyncPlan
     @Binding var formatRaw: String
     @Binding var bitrateRaw: Int
+    @Binding var artworkMaxSize: Int
     let onConfirm: () -> Void
     let onCancel: () -> Void
 
@@ -406,38 +409,61 @@ struct SyncPlanSheet: View {
 
             Divider()
 
-            HStack {
-                if !plan.converts.isEmpty {
-                    Text("Convert to:")
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Artwork size:")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Picker("", selection: $formatRaw) {
-                        ForEach(ConversionFormat.allCases) { f in
-                            Text(f.fileExtension.uppercased()).tag(f.rawValue)
-                        }
+                    Picker("", selection: $artworkMaxSize) {
+                        Text("300 × 300").tag(300)
+                        Text("600 × 600").tag(600)
+                        Text("1000 × 1000").tag(1000)
+                        Text("Keep original").tag(0)
                     }
-                    .frame(width: 90)
-                    Picker("", selection: $bitrateRaw) {
-                        ForEach(AudioBitrate.allCases) { b in
-                            Text(b.title).tag(b.rawValue)
-                        }
-                    }
-                    .frame(width: 130)
-                    if ConversionFormat(rawValue: formatRaw) == .mp3 && AudioConverter.findFFmpeg() == nil {
-                        Label("needs ffmpeg", systemImage: "exclamationmark.triangle")
+                    .frame(width: 150)
+                    Text("Covers are resized to this before syncing")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+
+                if !plan.converts.isEmpty {
+                    HStack {
+                        Text("Convert to:")
                             .font(.caption)
-                            .foregroundColor(.orange)
+                            .foregroundColor(.secondary)
+                        Picker("", selection: $formatRaw) {
+                            ForEach(ConversionFormat.allCases) { f in
+                                Text(f.fileExtension.uppercased()).tag(f.rawValue)
+                            }
+                        }
+                        .frame(width: 90)
+                        Picker("", selection: $bitrateRaw) {
+                            ForEach(AudioBitrate.allCases) { b in
+                                Text(b.title).tag(b.rawValue)
+                            }
+                        }
+                        .frame(width: 130)
+                        if ConversionFormat(rawValue: formatRaw) == .mp3 && AudioConverter.findFFmpeg() == nil {
+                            Label("needs ffmpeg", systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                        Spacer()
                     }
                 }
-                Spacer()
-                Button("Cancel", action: onCancel)
-                Button("Sync \(plan.totalToSync) Files", action: onConfirm)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(plan.totalToSync == 0)
+
+                HStack {
+                    Spacer()
+                    Button("Cancel", action: onCancel)
+                    Button("Sync \(plan.totalToSync) Files", action: onConfirm)
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(plan.totalToSync == 0)
+                }
             }
             .padding(12)
         }
-        .frame(width: 560, height: 440)
+        .frame(width: 580, height: 500)
     }
 
     @ViewBuilder

@@ -21,6 +21,7 @@ struct EditTrackSheet: View {
     @State private var artworkData: Data? = nil
     @State private var isFetchingArt = false
     @State private var isSaving = false
+    @AppStorage(PodSyncSettings.artworkMaxSizeKey) private var artworkMaxSize: Int = 600
 
     private var ipodManager: IPodManager { deviceManager.ipodManager }
 
@@ -66,6 +67,17 @@ struct EditTrackSheet: View {
                         Label("Choose File...", systemImage: "folder")
                             .font(.caption)
                     }
+
+                    Picker("", selection: $artworkMaxSize) {
+                        Text("300 px").tag(300)
+                        Text("600 px").tag(600)
+                        Text("1000 px").tag(1000)
+                        Text("Original").tag(0)
+                    }
+                    .frame(width: 110)
+                    Text("Saved size")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
 
                 // Fields
