@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PodSync — Desktop iPod Manager for macOS</title>
+<meta name="description" content="PodSync is a free, open-source macOS app for managing classic iPods without iTunes: music, podcasts, playlists, auto mixes, artwork tools, and more.">
+<link rel="icon" href="https://raw.githubusercontent.com/owen-tariq/PodSync/main/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d12;--bg2:#11141c;--card:#161a24;--line:#242a38;
+  --text:#e8ecf4;--muted:#9aa3b5;--accent:#5b8cff;--accent2:#9b6bff;
+  --grad:linear-gradient(120deg,#5b8cff,#9b6bff);
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+code{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#0d1017;border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.codeblock{font-family:'JetBrains Mono',monospace;font-size:.95rem;background:#0d1017;border:1px solid var(--line);border-radius:10px;padding:14px 18px;overflow-x:auto;margin:12px 0}
+h2{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.section{padding:88px 0}
+.kicker{display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.sub{color:var(--muted);max-width:640px;margin-bottom:36px}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:50;background:rgba(11,13,18,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.navin{display:flex;align-items:center;gap:28px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;color:var(--text)}
+.brand img{width:26px;height:26px;border-radius:6px}
+.navlinks{display:flex;gap:22px;margin-left:auto}
+.navlinks a{color:var(--muted);font-size:.92rem;font-weight:500}
+.navlinks a:hover{color:var(--text);text-decoration:none}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;border-radius:10px;padding:12px 22px;font-size:.98rem;transition:transform .15s ease,box-shadow .15s ease}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 28px rgba(91,140,255,.35)}
+.btn-ghost{border:1px solid var(--line);color:var(--text);background:var(--card)}
+.nav-dl{padding:8px 16px;font-size:.88rem}
+
+/* Hero */
+.hero{padding:96px 0 72px;text-align:center;background:
+  radial-gradient(900px 420px at 50% -80px,rgba(91,140,255,.16),transparent 70%),
+  radial-gradient(700px 380px at 80% 10%,rgba(155,107,255,.10),transparent 70%)}
+.hero h1{font-size:clamp(2.4rem,6vw,4rem);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.tag{font-size:1.25rem;color:var(--muted);margin:18px auto 8px;max-width:680px}
+.hero .cta{display:flex;gap:14px;justify-content:center;margin:30px 0 14px;flex-wrap:wrap}
+.hero .fine{font-size:.85rem;color:var(--muted)}
+.heroimg{margin-top:52px;position:relative}
+.heroimg img{width:100%;max-width:960px;border-radius:16px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+
+/* Features */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+.card .ic{font-size:1.5rem;margin-bottom:12px;display:inline-block}
+.card h3{font-size:1.08rem;font-weight:700;margin-bottom:6px}
+.card p{color:var(--muted);font-size:.94rem}
+
+/* Screenshots */
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.shots figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;cursor:zoom-in;transition:transform .15s ease}
+.shots figure:hover{transform:translateY(-3px)}
+.shots img{width:100%;display:block}
+.shots figcaption{padding:10px 14px;font-size:.85rem;color:var(--muted)}
+.lightbox{position:fixed;inset:0;background:rgba(5,6,10,.92);display:none;align-items:center;justify-content:center;z-index:100;cursor:zoom-out;padding:32px}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;border-radius:12px}
+
+/* Install steps */
+.steps{display:grid;gap:14px;max-width:760px}
+.step{display:flex;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+.step .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--grad);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step h4{font-size:1rem;margin-bottom:4px}
+.step p{color:var(--muted);font-size:.93rem}
+.note{border-left:3px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0;padding:14px 18px;color:var(--muted);font-size:.92rem;max-width:760px;margin-top:18px}
+
+/* Why table */
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:.93rem}
+th{background:var(--bg2);font-weight:700}
+td:first-child{color:var(--muted)}
+.yes{color:#5bd68a;font-weight:700}
+.no{color:#e0687a}
+.meh{color:var(--muted)}
+
+/* FAQ */
+.faq{max-width:800px}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+summary{padding:16px 20px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--accent);font-weight:800;font-size:1.2rem}
+details[open] summary::after{content:"–"}
+details .a{padding:0 20px 18px;color:var(--muted);font-size:.94rem}
+details .a code{white-space:nowrap}
+
+/* Footer */
+footer{border-top:1px solid var(--line);padding:44px 0;color:var(--muted);font-size:.88rem}
+.footin{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:center}
+@media(max-width:640px){.navlinks{display:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap navin">
+    <a class="brand" href="#top">
+      <img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/logo.png" alt="PodSync logo">
+      PodSync
+    </a>
+    <div class="navlinks">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#install">Install</a>
+      <a href="#why">Why PodSync</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/owen-tariq/PodSync" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+    <a class="btn btn-primary nav-dl" href="https://github.com/owen-tariq/PodSync/releases/latest" target="_blank" rel="noopener noreferrer">Download</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Your classic iPod,<br><span>fully alive again.</span></h1>
+    <p class="tag">PodSync is a free, open-source macOS app that manages click-wheel iPods without iTunes — music, podcasts, playlists, auto mixes, artwork, and stats, all written straight to the device.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/owen-tariq/PodSync/releases/latest" target="_blank" rel="noopener noreferrer">⬇ Download for macOS</a>
+      <a class="btn btn-ghost" href="https://github.com/owen-tariq/PodSync" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+    </div>
+    <div class="fine">Free forever · No account · macOS 13+ · iPod Classic, Nano &amp; Mini</div>
+    <div class="heroimg">
+      <img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/1.png" alt="PodSync main window">
+    </div>
+  </div>
+</header>
+
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="kicker">Features</div>
+    <h2>Everything iTunes did. Plus everything it didn't.</h2>
+    <p class="sub">PodSync writes the iPod's own database directly via libgpod, so everything shows up in the device's native menus — no hacks, no re-flashing.</p>
+    <div class="grid">
+      <div class="card"><span class="ic">🖱️</span><h3>Drag &amp; drop syncing</h3><p>Drop files or whole folders onto the iPod. A sync plan shows exactly what will be added, converted, or skipped as a duplicate — before anything is written.</p></div>
+      <div class="card"><span class="ic">🎙️</span><h3>Full podcast manager</h3><p>Browse the Top 25 chart for your country, search the directory, or paste any RSS feed. Download episodes and sync them into the iPod's Podcasts menu with dates, descriptions, and unplayed dots.</p></div>
+      <div class="card"><span class="ic">🧹</span><h3>Podcast retention</h3><p>Keep only the latest N episodes of each show on the device. Old episodes are removed automatically when new ones sync.</p></div>
+      <div class="card"><span class="ic">🎛️</span><h3>Auto mixes</h3><p>Daily genre mixes, least-played rediscovery, most-played rotation, decade mixes, and per-artist mixes — built locally from your iPod's own play counts and ratings, refreshed every day. No account, no cloud.</p></div>
+      <div class="card"><span class="ic">📝</span><h3>Playlists &amp; smart playlists</h3><p>Create playlists on the device, or define rule-based smart playlists (artist, genre, year, rating, play count) that materialize onto the iPod. Back up all playlists and ratings to a JSON file and restore them anywhere.</p></div>
+      <div class="card"><span class="ic">🔄</span><h3>Format conversion</h3><p>FLAC, WAV, and AIFF convert to AAC with the system encoder — nothing to install. Add ffmpeg and OGG, Opus, WMA input and MP3 output work too, at 320/256/128 kbps.</p></div>
+      <div class="card"><span class="ic">🖼️</span><h3>Artwork tools</h3><p>Covers show right in the track list, missing ones are flagged, and one click fixes them all via cover lookup. Big 2000×2000 covers are downscaled to a size you choose before syncing.</p></div>
+      <div class="card"><span class="ic">✏️</span><h3>Metadata editing</h3><p>Edit title, artist, album, genre, year, rating, and artwork on device tracks — including batch edits across a whole selection. Untagged "Artist - Title" filenames are parsed automatically during sync.</p></div>
+      <div class="card"><span class="ic">📊</span><h3>Stats &amp; maintenance</h3><p>Listening stats from real play counts, an iTunes-style storage bar, a duplicate finder that keeps the best copy, a library ↔ iPod diff view, and Last.fm scrobbling of everything you played on the go.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="screenshots" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="kicker">Screenshots</div>
+    <h2>A native Mac app, through and through.</h2>
+    <p class="sub">Built entirely with SwiftUI. Click any screenshot to enlarge.</p>
+    <div class="shots">
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/1.png" alt="PodSync screenshot 1" loading="lazy"></figure>
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/2.png" alt="PodSync screenshot 2" loading="lazy"></figure>
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/3.png" alt="PodSync screenshot 3" loading="lazy"></figure>
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/4.png" alt="PodSync screenshot 4" loading="lazy"></figure>
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/5.png" alt="PodSync screenshot 5" loading="lazy"></figure>
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/6.png" alt="PodSync screenshot 6" loading="lazy"></figure>
+      <figure><img src="https://raw.githubusercontent.com/owen-tariq/PodSync/main/Screenshots/7.png" alt="PodSync screenshot 7" loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="install">
+  <div class="wrap">
+    <div class="kicker">Install</div>
+    <h2>Running in under a minute.</h2>
+    <p class="sub">Requirements: macOS 13 or later (Apple Silicon), a classic click-wheel iPod over USB. Optional: <code>brew install ffmpeg</code> for OGG/Opus/WMA input and MP3 output.</p>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h4>Download the DMG</h4><p>Grab <code>PodSync.dmg</code> from the <a href="https://github.com/owen-tariq/PodSync/releases/latest" target="_blank" rel="noopener noreferrer">latest release</a>.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h4>Drag to Applications</h4><p>Open the DMG and drag PodSync into your Applications folder.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h4>Clear the Gatekeeper flag</h4><p>PodSync is open source and not signed with a paid Apple certificate, so run this once in Terminal:</p><div class="codeblock">xattr -cr /Applications/PodSync.app</div></div></div>
+      <div class="step"><div class="n">4</div><div><h4>Plug in your iPod</h4><p>Connect it over USB so it mounts as a drive. PodSync detects it automatically and loads its library.</p></div></div>
+    </div>
+    <div class="note">iPod not detected? Make sure it appears in Finder first, try another cable or port, and close iTunes/Music if it grabbed the device. Always use PodSync's Eject button before unplugging.</div>
+  </div>
+</section>
+
+<section class="section" id="why" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="kicker">Why PodSync</div>
+    <h2>Free where others charge. Modern where others aged.</h2>
+    <p class="sub">Classic iPod tools tend to be paid, abandoned, or stuck in 2009. PodSync is a modern, actively developed, completely free alternative.</p>
+    <table>
+      <tr><th></th><th>PodSync</th><th>iTunes / Music</th><th>Paid iPod tools</th></tr>
+      <tr><td>Price</td><td class="yes">Free &amp; open source</td><td class="meh">Free, but…</td><td class="no">$20–40</td></tr>
+      <tr><td>Works without an Apple account</td><td class="yes">Yes</td><td class="no">No</td><td class="meh">Varies</td></tr>
+      <tr><td>Podcast charts, subscriptions &amp; retention</td><td class="yes">Yes</td><td class="no">Discontinued</td><td class="no">Rare</td></tr>
+      <tr><td>Auto mixes from your listening history</td><td class="yes">Yes, on-device</td><td class="no">Cloud only</td><td class="no">No</td></tr>
+      <tr><td>FLAC / OGG / Opus conversion</td><td class="yes">Yes</td><td class="no">No FLAC</td><td class="meh">Sometimes</td></tr>
+      <tr><td>Duplicate finder &amp; artwork fixer</td><td class="yes">Yes</td><td class="no">No</td><td class="meh">Sometimes</td></tr>
+      <tr><td>Playlist &amp; ratings backup to a file</td><td class="yes">Yes</td><td class="no">No</td><td class="no">Rare</td></tr>
+      <tr><td>Native Apple Silicon app</td><td class="yes">Yes (SwiftUI)</td><td class="yes">Yes</td><td class="no">Mostly Intel-era</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="kicker">FAQ</div>
+    <h2>Questions, answered.</h2>
+    <div class="faq" style="margin-top:28px">
+      <details open>
+        <summary>macOS says the app "can't be verified" or may contain malware. Is it safe?</summary>
+        <div class="a">Yes — that warning appears for any app not signed with a paid Apple Developer certificate, which open-source projects often skip. PodSync's full source code is public on GitHub and every release is built automatically by GitHub's own servers from that code. Clear the warning once with <code>xattr -cr /Applications/PodSync.app</code>.</div>
+      </details>
+      <details>
+        <summary>Which iPods are supported?</summary>
+        <div class="a">Classic click-wheel iPods that mount as a USB drive: iPod Classic (tested on 7th gen), iPod Video, Nano, and Mini. iPod Touch and iPhone use a different sync protocol and are not supported.</div>
+      </details>
+      <details>
+        <summary>Do I need iTunes installed?</summary>
+        <div class="a">No. PodSync reads and writes the iPod's iTunesDB directly via libgpod, so it works completely standalone. It coexists fine with an iPod that was previously synced by iTunes.</div>
+      </details>
+      <details>
+        <summary>How do the Auto Mixes work — is it random?</summary>
+        <div class="a">Not random. Your iPod records a play count every time you listen; PodSync reads those back along with your star ratings. Daily mixes cluster your genres weighted by what you actually play, On Repeat is literally your most-played, and Discover Weekly resurfaces songs you've barely touched. The selection refreshes daily with a deterministic shuffle. Everything is computed on your Mac — no account, no cloud.</div>
+      </details>
+      <details>
+        <summary>Can it play FLAC on my iPod?</summary>
+        <div class="a">iPods can't play FLAC natively, so PodSync converts it: FLAC, WAV, and AIFF become AAC using macOS's built-in encoder, at a bitrate you pick (320/256/128 kbps). Install ffmpeg (<code>brew install ffmpeg</code>) and OGG, Opus, and WMA input plus MP3 output work too.</div>
+      </details>
+      <details>
+        <summary>Where do podcasts come from?</summary>
+        <div class="a">The charts and search use Apple's public podcast directory; episode downloads come straight from each show's own RSS feed. You can also subscribe to any raw RSS URL. Synced episodes land in the iPod's native Podcasts menu with proper dates, descriptions, and unplayed indicators.</div>
+      </details>
+      <details>
+        <summary>Will PodSync mess up my existing library?</summary>
+        <div class="a">PodSync only writes when you sync, edit, or delete — browsing is read-only. Before large drops it shows a sync plan you confirm. Deleting a playlist never deletes its songs. And you can export all playlists and ratings to a JSON backup at any time.</div>
+      </details>
+      <details>
+        <summary>My iPod isn't detected. What do I check?</summary>
+        <div class="a">The iPod must mount as a disk: check it appears in Finder, enable "disk use" if it was iTunes-managed, try another cable or USB port, and quit iTunes/Music if it auto-opened. PodSync looks for the iPod_Control folder on any mounted volume.</div>
+      </details>
+      <details>
+        <summary>Does it send my data anywhere?</summary>
+        <div class="a">No telemetry, no account, no ads. Network access is only used for the features you invoke: podcast feeds and charts, cover-art lookup, and optional Last.fm scrobbling with your own credentials.</div>
+      </details>
+      <details>
+        <summary>Can I contribute or report a bug?</summary>
+        <div class="a">Please do — the project lives at <a href="https://github.com/owen-tariq/PodSync" target="_blank" rel="noopener noreferrer">github.com/owen-tariq/PodSync</a>. Open an issue for bugs or ideas; pull requests are welcome. Every push is built and tested by CI on a real macOS runner.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footin">
+    <div>PodSync — free, open-source iPod management for macOS.</div>
+    <div>
+      <a href="https://github.com/owen-tariq/PodSync" target="_blank" rel="noopener noreferrer">GitHub</a> ·
+      <a href="https://github.com/owen-tariq/PodSync/releases/latest" target="_blank" rel="noopener noreferrer">Download</a> ·
+      <a href="https://github.com/owen-tariq/PodSync/issues" target="_blank" rel="noopener noreferrer">Report a bug</a>
+    </div>
+    <div>Not affiliated with Apple Inc. iPod is a trademark of Apple Inc.</div>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg" src="" alt=""></div>
+<script>
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lightboxImg');
+document.querySelectorAll('.shots figure img').forEach(img => {
+  img.parentElement.addEventListener('click', () => {
+    lbImg.src = img.src;
+    lb.classList.add('open');
+  });
+});
+lb.addEventListener('click', () => lb.classList.remove('open'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('open'); });
+</script>
+</body>
+</html>
