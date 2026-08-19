@@ -337,3 +337,66 @@ private func makeLibrary() -> [TrackModel] {
     let data = Data([1, 2, 3]) // not even an image
     #expect(ArtworkResizer.resize(data, maxDimension: 0) == data)
 }
+
+// MARK: - Duplicate finder
+
+@Test func duplicateFinderGroupsSameSongs() {
+    var a = makeTrack(title: "Hello", artist: "Adele", album: "25")
+    a.bitrate = 320; a.ipodMediaType = 1
+    var b = makeTrack(title: "hello ", artist: "ADELE", album: "25 Deluxe")
+    b.bitrate = 128; b.ipodMediaType = 1
+    var c = makeTrack(title: "Other", artist: "Adele")
+    c.ipodMediaType = 1
+
+    let groups = DuplicateFinder.findDuplicates(in: [a, b, c])
+    #expect(groups.count == 1)
+    #expect(groups[0].tracks.count == 2)
+    // Best copy (320kbps) kept first
+    #expect(groups[0].tracks[0].bitrate == 320)
+
+    let deletions = DuplicateFinder.suggestedDeletions(in: groups)
+    #expect(deletions == [b.id])
+}
+
+@Test func duplicateFinderIgnoresPodcasts() {
+    var a = makeTrack(title: "Ep 1", artist: "Show")
+    a.ipodMediaType = 4
+    var b = makeTrack(title: "Ep 1", artist: "Show")
+    b.ipodMediaType = 4
+    #expect(DuplicateFinder.findDuplicates(in: [a, b]).isEmpty)
+}
+
+// MARK: - Filename tag parser
+
+@Test func filenameParserPatterns() {
+    #expect(FilenameTagParser.parse(filename: "Daft Punk - One More Time.mp3")
+        == FilenameTagParser.Guess(title: "One More Time", artist: "Daft Punk", trackNumber: nil))
+    #expect(FilenameTagParser.parse(filename: "03 - Daft Punk - Harder Better.flac")
+        == FilenameTagParser.Guess(title: "Harder Better", artist: "Daft Punk", trackNumber: 3))
+    #expect(FilenameTagParser.parse(filename: "07. Around the World.m4a")
+        == FilenameTagParser.Guess(title: "Around the World", artist: nil, trackNumber: 7))
+    #expect(FilenameTagParser.parse(filename: "12 Aerodynamic.mp3")
+        == FilenameTagParser.Guess(title: "Aerodynamic", artist: nil, trackNumber: 12))
+    #expect(FilenameTagParser.parse(filename: "Some_Song_Name.mp3")
+        == FilenameTagParser.Guess(title: "Some Song Name", artist: nil, trackNumber: nil))
+}
+
+// MARK: - Playlist backup matching
+
+@Test func playlistBackupMatchesExactThenLoose() {
+    var onDevice1 = makeTrack(title: "Hello", artist: "Adele", album: "25")
+    onDevice1.ipodMediaType = 1
+    var onDevice2 = makeTrack(title: "Skyfall", artist: "Adele", album: "Singles")
+    onDevice2.ipodMediaType = 1
+
+    let refs = [
+        PlaylistBackupFile.TrackRef(title: "Hello", artist: "adele", album: "25", stars: 5),      // exact
+        PlaylistBackupFile.TrackRef(title: "Skyfall", artist: "Adele", album: "Bond", stars: 4),  // loose (album differs)
+        PlaylistBackupFile.TrackRef(title: "Gone", artist: "Nobody", album: "X", stars: 1)        // missing
+    ]
+
+    let result = PlaylistBackup.matchTracks(refs: refs, tracks: [onDevice1, onDevice2])
+    #expect(result.matched.count == 2)
+    #expect(result.missing.count == 1)
+    #expect(result.missing[0].title == "Gone")
+}
