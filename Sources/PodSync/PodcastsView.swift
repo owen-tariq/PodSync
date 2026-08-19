@@ -404,6 +404,7 @@ struct PodcastSearchSheet: View {
     @State private var results: [PodcastSearchResult] = []
     @State private var isSearching = false
     @State private var subscribingFeed: String? = nil
+    @State private var previewResult: PodcastSearchResult? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -468,6 +469,13 @@ struct PodcastSearchSheet: View {
 
                         Spacer()
 
+                        Button("Episodes") {
+                            previewResult = result
+                        }
+                        .buttonStyle(.borderless)
+                        .font(.caption)
+                        .help("Browse episodes without subscribing")
+
                         if podcastManager.isSubscribed(feedURL: result.feedURL) {
                             Label("Subscribed", systemImage: "checkmark.circle.fill")
                                 .foregroundColor(.green)
@@ -486,11 +494,18 @@ struct PodcastSearchSheet: View {
                         }
                     }
                     .padding(.vertical, 2)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        previewResult = result
+                    }
                 }
                 .listStyle(.inset)
             }
         }
         .frame(width: 620, height: 480)
+        .sheet(item: $previewResult) { result in
+            PodcastPreviewSheet(result: result)
+        }
     }
 
     private func runSearch() {
@@ -498,6 +513,105 @@ struct PodcastSearchSheet: View {
         Task {
             results = await podcastManager.search(term: searchTerm)
             isSearching = false
+        }
+    }
+}
+
+// MARK: - Episode preview (browse without subscribing)
+
+struct PodcastPreviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var deviceManager: DeviceManager
+    @ObservedObject private var podcastManager = PodcastManager.shared
+
+    let result: PodcastSearchResult
+
+    @State private var episodes: [PodcastEpisode] = []
+    @State private var isLoading = true
+    @State private var subscribing = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                AsyncImage(url: result.artworkURL.flatMap { URL(string: $0) }) { image in
+                    image.resizable().aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.purple.opacity(0.2))
+                        .overlay(Image(systemName: "mic").foregroundColor(.purple))
+                }
+                .frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(result.title)
+                        .font(.headline)
+                        .lineLimit(1)
+                    if let author = result.author {
+                        Text(author)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                    Text("\(episodes.count) episodes")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                if podcastManager.isSubscribed(feedURL: result.feedURL) {
+                    Label("Subscribed", systemImage: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                } else if subscribing {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Button("Subscribe") {
+                        subscribing = true
+                        Task {
+                            await podcastManager.subscribe(result: result)
+                            subscribing = false
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+
+                Button("Done") { dismiss() }
+            }
+            .padding(12)
+
+            Divider()
+
+            if isLoading {
+                VStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading episodes...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if episodes.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 32))
+                        .foregroundColor(.secondary)
+                    Text("Couldn't load this feed")
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(episodes) { episode in
+                    EpisodeRow(episode: episode)
+                }
+                .listStyle(.inset)
+            }
+        }
+        .frame(width: 620, height: 480)
+        .task {
+            episodes = await podcastManager.previewEpisodes(feedURL: result.feedURL)
+                .sorted { ($0.pubDate ?? .distantPast) > ($1.pubDate ?? .distantPast) }
+            isLoading = false
         }
     }
 }

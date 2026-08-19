@@ -28,8 +28,31 @@ struct SettingsView: View {
                 .tabItem { Label("Syncing", systemImage: "arrow.triangle.2.circlepath") }
             podcastsTab
                 .tabItem { Label("Podcasts", systemImage: "antenna.radiowaves.left.and.right") }
+            aboutTab
+                .tabItem { Label("About", systemImage: "info.circle") }
         }
         .frame(width: 460, height: 300)
+    }
+
+    private var aboutTab: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "ipod")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary)
+            Text("PodSync")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("Version \(AppInfo.displayVersion) (build \(AppInfo.displayBuild))")
+                .font(.callout)
+                .foregroundColor(.secondary)
+            Text("Free, open-source iPod management for macOS.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Link("github.com/owen-tariq/PodSync", destination: URL(string: "https://github.com/owen-tariq/PodSync")!)
+                .font(.caption)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(20)
     }
 
     private var conversionTab: some View {

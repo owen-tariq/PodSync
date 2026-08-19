@@ -191,6 +191,16 @@ final class PodcastManager: ObservableObject {
         }
     }
 
+    /// Load a feed's episodes for browsing WITHOUT subscribing.
+    /// Cached, so subscribing afterwards is instant.
+    func previewEpisodes(feedURL: String) async -> [PodcastEpisode] {
+        if let cached = episodesByFeed[feedURL], !cached.isEmpty {
+            return cached
+        }
+        await refresh(feedURL: feedURL)
+        return episodesByFeed[feedURL] ?? []
+    }
+
     // MARK: - Downloads
 
     /// Local file location for a downloaded episode (nil if not downloaded).

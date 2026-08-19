@@ -111,6 +111,18 @@ struct ContentView: View {
 
     @ViewBuilder
     private var sidebarContent: some View {
+        sidebarList
+            .safeAreaInset(edge: .bottom) {
+                Text(AppInfo.versionString)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+    }
+
+    @ViewBuilder
+    private var sidebarList: some View {
         List(selection: $selection) {
             Section("LIBRARIES") {
                 NavigationLink(value: SidebarItem.library) {

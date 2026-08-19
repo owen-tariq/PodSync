@@ -50,6 +50,7 @@ PodSync syncs music, podcasts, audiobooks, and video to click-wheel iPods (Class
   <img src="Screenshots/3.png" width="400" />
   <img src="Screenshots/4.png" width="400" />
   <img src="Screenshots/5.png" width="400" />
+  <img src="Screenshots/6.png" width="400" />
 </p>
 
 ## Requirements
