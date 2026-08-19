@@ -155,7 +155,7 @@ final class AudioConverter: Sendable {
             process.executableURL = URL(fileURLWithPath: executable)
             process.arguments = arguments
 
-            nonisolated(unsafe) let stderrPipe = Pipe()
+            let stderrPipe = Pipe()
             process.standardError = stderrPipe
             process.standardOutput = Pipe()
 

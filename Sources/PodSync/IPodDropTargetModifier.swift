@@ -135,11 +135,10 @@ struct IPodDropTargetModifier: ViewModifier {
         }
     }
 
-    /// Expand folders, classify every file, detect duplicates, and build the plan.
-    @MainActor
-    private func buildAndPresentPlan(_ urls: [URL]) async {
+    /// Synchronously expand dropped folders into a flat list of audio files.
+    /// (FileManager's enumerator cannot be iterated from an async context.)
+    private nonisolated static func expandDroppedURLs(_ urls: [URL]) -> [URL] {
         var files: [URL] = []
-
         for url in urls {
             var isDir: ObjCBool = false
             if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
@@ -153,9 +152,14 @@ struct IPodDropTargetModifier: ViewModifier {
                 files.append(url)
             }
         }
+        let allAudioExts = nativeExtensions.union(AudioConverter.convertibleExtensions)
+        return files.filter { allAudioExts.contains($0.pathExtension.lowercased()) }
+    }
 
-        let allAudioExts = Self.nativeExtensions.union(AudioConverter.convertibleExtensions)
-        files = files.filter { allAudioExts.contains($0.pathExtension.lowercased()) }
+    /// Expand folders, classify every file, detect duplicates, and build the plan.
+    @MainActor
+    private func buildAndPresentPlan(_ urls: [URL]) async {
+        let files = Self.expandDroppedURLs(urls)
         guard !files.isEmpty else { return }
 
         var newPlan = SyncPlan()

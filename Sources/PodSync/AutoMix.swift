@@ -38,8 +38,10 @@ enum AutoMixEngine {
     /// Seed that changes once per day (so "Daily Mix" is stable all day but
     /// different tomorrow).
     static func dailySeed(for date: Date = Date()) -> UInt64 {
-        let comps = Calendar.current.dateComponents([.year, .dayOfYear], from: date)
-        return UInt64((comps.year ?? 0) * 1000 + (comps.dayOfYear ?? 0))
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: date)
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: date) ?? 0
+        return UInt64(year * 1000 + dayOfYear)
     }
 
     // MARK: - Scoring helpers
