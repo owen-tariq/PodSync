@@ -302,7 +302,13 @@ struct IPodDropTargetModifier: ViewModifier {
             }
         }
 
-        let artworkData = await getArtworkData(url: sourceURL)
+        var artworkData = await getArtworkData(url: sourceURL)
+        if let data = artworkData {
+            artworkData = ArtworkResizer.resizeToSetting(data)
+            // Keep a copy so the app can always display this album's artwork,
+            // even when conversion strips embedded art from the synced file.
+            ArtworkCache.shared.storeToDisk(data: artworkData, album: meta.album)
+        }
 
         let success = ipodManager.addTrack(
             filePath: url.path,
@@ -402,6 +408,9 @@ struct SyncPlanSheet: View {
 
             HStack {
                 if !plan.converts.isEmpty {
+                    Text("Convert to:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     Picker("", selection: $formatRaw) {
                         ForEach(ConversionFormat.allCases) { f in
                             Text(f.fileExtension.uppercased()).tag(f.rawValue)
@@ -413,7 +422,12 @@ struct SyncPlanSheet: View {
                             Text(b.title).tag(b.rawValue)
                         }
                     }
-                    .frame(width: 110)
+                    .frame(width: 130)
+                    if ConversionFormat(rawValue: formatRaw) == .mp3 && AudioConverter.findFFmpeg() == nil {
+                        Label("needs ffmpeg", systemImage: "exclamationmark.triangle")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
                 }
                 Spacer()
                 Button("Cancel", action: onCancel)

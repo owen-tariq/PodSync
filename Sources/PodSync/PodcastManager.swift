@@ -282,12 +282,16 @@ final class PodcastManager: ObservableObject {
         let attrs = try? fileManager.attributesOfItem(atPath: file.path)
         let size = (attrs?[.size] as? Int64) ?? episode.fileSize ?? 0
 
-        // Fetch show artwork for the episode
+        // Fetch show artwork for the episode (resized per the artwork setting)
         var artworkData: Data? = nil
         if let sub = subscriptions.first(where: { $0.feedURL == episode.feedURL }),
            let artURLString = sub.artworkURL,
            let artURL = URL(string: artURLString) {
             artworkData = try? await URLSession.shared.data(from: artURL).0
+        }
+        if let data = artworkData {
+            artworkData = ArtworkResizer.resizeToSetting(data)
+            ArtworkCache.shared.storeToDisk(data: artworkData, album: episode.showTitle)
         }
 
         let meta = PodcastTrackMeta(

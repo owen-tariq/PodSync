@@ -323,3 +323,17 @@ private func makeLibrary() -> [TrackModel] {
     #expect(names.contains("On Repeat"))
     #expect(Set(names).count == names.count) // no duplicate playlist names
 }
+
+// MARK: - Artwork resizing
+
+@Test func artworkResizerKeepsSmallImages() {
+    // 1x1 PNG
+    let png = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")!
+    let out = ArtworkResizer.resize(png, maxDimension: 300)
+    #expect(out == png) // already smaller than the cap — untouched
+}
+
+@Test func artworkResizerZeroMeansOriginal() {
+    let data = Data([1, 2, 3]) // not even an image
+    #expect(ArtworkResizer.resize(data, maxDimension: 0) == data)
+}

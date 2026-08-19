@@ -150,6 +150,23 @@ struct EditTrackSheet: View {
             trackNumText = first.trackNumber.map(String.init) ?? ""
             discNumText = first.discNumber.map(String.init) ?? ""
             artworkData = first.artworkData
+
+            // Device tracks don't carry artwork in memory — try the embedded
+            // art in the file on the iPod so the current cover is visible.
+            if artworkData == nil {
+                let fileURL = first.filePath
+                Task { @MainActor in
+                    let data = await Task.detached(priority: .userInitiated) { () -> Data? in
+                        let image = ArtworkCache.extractArtwork(from: fileURL)
+                        return image?.tiffRepresentation.flatMap {
+                            NSBitmapImageRep(data: $0)?.representation(using: .jpeg, properties: [.compressionFactor: 0.9])
+                        }
+                    }.value
+                    if artworkData == nil, let data = data {
+                        artworkData = data
+                    }
+                }
+            }
         }
     }
 
@@ -190,7 +207,12 @@ struct EditTrackSheet: View {
         if !isBatch, let trackNum = Int(trackNumText) { edit.trackNumber = trackNum }
         if !isBatch, let discNum = Int(discNumText) { edit.discNumber = discNum }
         if rating >= 0 { edit.rating = rating }
-        if let art = artworkData, art != tracks.first?.artworkData { edit.artworkData = art }
+        if let art = artworkData, art != tracks.first?.artworkData {
+            let resized = ArtworkResizer.resizeToSetting(art)
+            edit.artworkData = resized
+            let albumName = !album.isEmpty ? album : tracks.first?.album
+            ArtworkCache.shared.storeToDisk(data: resized, album: albumName)
+        }
 
         ipodManager.updateTracks(ids: trackIds, edit: edit)
         isSaving = false

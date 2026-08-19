@@ -7,6 +7,7 @@ enum PodSyncSettings {
     static let syncPlanEnabledKey = "podsync.syncPlanEnabled"
     static let podcastKeepLatestDefaultKey = "podsync.podcastKeepLatestDefault"
     static let podcastSyncLatestKey = "podsync.podcastSyncLatest"
+    static let artworkMaxSizeKey = "podsync.artworkMaxSize"
 }
 
 struct SettingsView: View {
@@ -15,6 +16,7 @@ struct SettingsView: View {
     @AppStorage(PodSyncSettings.syncPlanEnabledKey) private var syncPlanEnabled: Bool = true
     @AppStorage(PodSyncSettings.podcastKeepLatestDefaultKey) private var podcastKeepLatestDefault: Int = 0
     @AppStorage(PodSyncSettings.podcastSyncLatestKey) private var podcastSyncLatest: Int = 5
+    @AppStorage(PodSyncSettings.artworkMaxSizeKey) private var artworkMaxSize: Int = 600
 
     private var ffmpegInstalled: Bool { AudioConverter.findFFmpeg() != nil }
 
@@ -62,6 +64,18 @@ struct SettingsView: View {
         Form {
             Toggle("Review sync plan before adding dropped files", isOn: $syncPlanEnabled)
             Text("When enabled, dropping files onto the iPod shows a summary of what will be added, converted, and skipped as duplicates before anything is written.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Divider()
+
+            Picker("Artwork size written to iPod:", selection: $artworkMaxSize) {
+                Text("300 × 300").tag(300)
+                Text("600 × 600 (recommended)").tag(600)
+                Text("1000 × 1000").tag(1000)
+                Text("Keep original").tag(0)
+            }
+            Text("Big covers (e.g. 2000×2000) are downscaled before syncing — the iPod screen only shows ~320px, and smaller artwork saves space and speeds up browsing.")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
