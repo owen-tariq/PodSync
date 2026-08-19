@@ -1,47 +1,49 @@
 <div align="center">
-  <img src="logo.png" alt="PodSync Logo" width="200" />
+  <img src="logo.png" alt="PodSync" width="160" />
   <h1>PodSync</h1>
-  <p>A free, open-source macOS application to sync your modern music library to classic iPods.</p>
+  <p>A native macOS application for managing classic iPods without iTunes.</p>
 </div>
 
-## Why PodSync?
-
-There are some fantastic tools out there for managing classic iPods—like Podcenter—that offer excellent functionality. However, many of these solutions are paid. 
-
-I created PodSync because I believe that keeping classic hardware alive shouldn't have to cost money. PodSync provides a modern, native macOS experience for syncing your music and scrobbling your iPod listens to Last.fm—completely free and open source. Syncing your iPod is dead simple.
+PodSync syncs music, podcasts, audiobooks, and video to click-wheel iPods (Classic, Nano, Mini) over USB. It writes the iPod's own database directly via libgpod, so everything appears in the device's native menus. It is free and open source.
 
 ## Features
 
-### Syncing
-- ✨ **True Drag-and-Drop Syncing:** Grab a folder of music from your Mac, drag it into the iPod's library inside PodSync, and watch it sync.
-- 📋 **Sync Plan Preview:** Before anything is written, review exactly what will be added, converted, and skipped as a duplicate — then confirm.
-- 🎬 **Movies, Podcasts, and Audiobooks:** All media types your classic iPod natively supports, automatically sorted into their correct menus on the device.
-- 🎵 **Audio Conversion:** FLAC/WAV/AIFF convert to AAC using macOS's built-in encoder — no extra installs. With [ffmpeg](https://formulae.brew.sh/formula/ffmpeg) installed (`brew install ffmpeg`), OGG/Opus/WMA input and MP3 output work too.
-- **Duplicate Detection:** Detects songs already on your device before syncing.
-- 💾 **Persistent Library:** Your chosen music folders are remembered and rescanned automatically every launch.
+**Syncing**
+- Drag-and-drop syncing of files or folders directly onto the device
+- Sync plan review before writing: see what will be added, converted, or skipped as a duplicate
+- Duplicate detection against the device library
+- Correct media-type routing: music, movies, podcasts, and audiobooks land in their proper iPod menus
+- Library folders persist across launches and rescan automatically
 
-### Podcasts
-- 🎙️ **Full Podcast Manager:** Search the podcast directory, subscribe to any show (or paste an RSS URL), browse and download episodes, and sync them straight into the iPod's Podcasts menu — with proper episode dates, descriptions, and unplayed dots.
-- 🧹 **Retention:** Keep only the latest N episodes of a show on the iPod; old ones are removed automatically when new ones sync.
+**Audio conversion**
+- FLAC, WAV, and AIFF convert to AAC using the system encoder; no additional software required
+- With [ffmpeg](https://formulae.brew.sh/formula/ffmpeg) installed, OGG, Opus, and WMA input and MP3 output are also supported
+- Selectable bitrate (320 / 256 / 128 kbps), configurable per sync or in Settings
 
-### Playlists & Mixes
-- 📝 **Playlists:** Create, rename, and delete playlists on the iPod; add tracks by right-click or picker.
-- ⚙️ **Smart Playlists:** Rule-based playlists (artist / album / genre / year / rating / play count) materialized onto the device.
-- 🎛️ **Auto Mixes (local "Spotify"):** Daily Mix 1–4, Discover Weekly, Release Radar, On Repeat, Repeat Rewind, Your Time Capsule, Your Top Songs, decade mixes, and "This Is <artist>" — all generated from your own library with a fresh shuffle every day. One click writes them to the iPod.
-- 🪄 **Genius Mix:** Right-click any song → "Genius Mix from This Song" builds a similarity-based playlist around it.
+**Podcasts**
+- Search the podcast directory or subscribe to any RSS feed
+- Browse, download, and sync episodes into the iPod's Podcasts menu with correct dates, descriptions, and unplayed indicators
+- Per-show retention: keep only the latest N episodes on the device; older ones are removed on sync
 
-### Library & Editing
-- ✏️ **Metadata Editing:** Edit title, artist, album, genre, year, rating, and artwork on device tracks — including batch edits across a selection.
-- 🖼️ **Artwork Lookup:** One-click cover-art search for tracks missing artwork.
-- 🔍 **Search & Sort:** Sortable columns (title/artist/album/genre/year/rating/plays) and instant search.
+**Playlists**
+- Create, rename, and delete standard playlists; add tracks from the library view or a picker
+- Smart playlists built from rules (artist, album, genre, year, rating, play count) with match-all/any logic, limits, and sorting
+- Auto mixes generated locally from listening history — play counts and ratings read back from the device: daily genre mixes, least-played rediscovery, most-played rotation, recently added, older favorites, top songs, decade mixes, and per-artist mixes
+- A similarity-based mix can be generated from any song (artist, genre, album, era, and rating weighting)
 
-### More
-- **Native macOS Interface:** Built entirely with SwiftUI.
-- **Last.fm Integration:** Automatically extracts your play history from the iPod and scrobbles it to Last.fm.
-- **Settings (⌘,):** Conversion format & bitrate, sync-plan toggle, podcast defaults.
-- **Open Source:** Free to use, inspect, and modify forever.
+**Library management**
+- Edit title, artist, album, album artist, genre, composer, year, track number, rating, and artwork on device tracks, including batch edits across a selection
+- Cover-art lookup for tracks missing artwork
+- Artwork is downscaled to a configurable size (300 / 600 / 1000 px or original) before it is written to the device
+- Sortable columns and search across title, artist, album, and genre
+
+**Other**
+- Last.fm scrobbling of play history extracted from the device
+- Native SwiftUI interface
+- Preferences window (⌘,) for conversion, sync, artwork, and podcast defaults
 
 ## Screenshots
+
 <p align="center">
   <img src="Screenshots/1.png" width="400" />
   <img src="Screenshots/2.png" width="400" />
@@ -51,28 +53,37 @@ I created PodSync because I believe that keeping classic hardware alive shouldn'
 </p>
 
 ## Requirements
-- macOS 13.0 or later
-- A classic iPod (e.g., iPod Classic, iPod Nano)
 
-*(Tested and verified working on a MacBook Air M2 2023 and an iPod Classic 7th Gen)*
+- macOS 13.0 or later
+- A classic click-wheel iPod (tested on iPod Classic 7th generation)
+- Optional: ffmpeg, for OGG/Opus/WMA input and MP3 output
 
 ## Installation
 
-1. Go to the [Releases page](https://github.com/owen-tariq/PodSync/releases) and download the latest `PodSync.dmg`.
-2. Open the `.dmg` file and drag **PodSync** into your `Applications` folder.
+1. Download `PodSync.dmg` from the [latest release](https://github.com/owen-tariq/PodSync/releases/latest).
+2. Open the DMG and drag PodSync into Applications.
+3. Because the app is not signed with a paid Apple Developer certificate, clear the quarantine flag before first launch:
 
-### Bypassing the "Apple could not verify" Warning
-Because PodSync is a free and open-source application, it does not use a paid Apple Developer certificate. When you launch it for the first time, macOS Gatekeeper may show a warning that says:
-> *"Apple could not verify “PodSync.app” is free of malware..."*
-
-**To fix this and open the app:**
-Open your **Terminal** app and run the following command to remove the quarantine flag:
-
-```bash
+```sh
 xattr -cr /Applications/PodSync.app
 ```
 
-After running this command, you can open PodSync normally from your Applications folder.
+## Building from source
+
+```sh
+git clone https://github.com/owen-tariq/PodSync.git
+cd PodSync
+bash build_app.sh
+```
+
+The script produces `PodSync.app` in the repository root. CI builds, tests, and packages a DMG on every push; see `.github/workflows/build.yml`.
+
+## Notes
+
+- The bundled `LibGPod.framework` is a prebuilt libgpod for Apple Silicon.
+- Podcast search and artwork lookup use the iTunes Search API; podcast downloads come directly from each show's RSS feed.
+- Auto mixes are computed entirely on-device from the iPod's play counts and ratings. No account or cloud service is involved.
 
 ## License
-This project is open-source and free to use.
+
+Open source and free to use.
