@@ -1,4 +1,4 @@
-// swift-tools-version: 6.3
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -36,7 +36,16 @@ let package = Package(
         ),
         .testTarget(
             name: "PodSyncTests",
-            dependencies: ["PodSync"]
+            dependencies: ["PodSync"],
+            linkerSettings: [
+                .unsafeFlags([
+                    "-F", "Frameworks",
+                    // Absolute rpath so the test bundle can locate the bundled
+                    // LibGPod.framework (the app bundle uses @executable_path).
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "\(Context.packageDirectory)/Frameworks"
+                ])
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]

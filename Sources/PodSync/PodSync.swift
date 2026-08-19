@@ -31,15 +31,19 @@ struct PodSyncApp: App {
                     addFileToLibrary()
                 }
                 .keyboardShortcut("o", modifiers: .command)
-                
+
                 Button("Add Folder to Library...") {
                     libraryManager.addLibraryFolder()
                 }
                 .keyboardShortcut("o", modifiers: [.command, .shift])
             }
         }
+
+        Settings {
+            SettingsView()
+        }
     }
-    
+
     private func addFileToLibrary() {
         let panel = NSOpenPanel()
         panel.title = "Add File to Library"
@@ -60,6 +64,7 @@ enum SidebarItem: Hashable {
     case library
     case albums
     case playlists
+    case podcasts
     case devices
     case deviceSongs
     case deviceAlbums
@@ -67,6 +72,7 @@ enum SidebarItem: Hashable {
     case deviceMovies
     case devicePodcasts
     case deviceAudiobooks
+    case devicePlaylists
     case playlistDetail(UUID)
     case lastfm
 }
@@ -115,6 +121,10 @@ struct ContentView: View {
                     Label("Albums", systemImage: "square.stack")
                 }
 
+                NavigationLink(value: SidebarItem.podcasts) {
+                    Label("Podcasts", systemImage: "antenna.radiowaves.left.and.right")
+                }
+
                 ForEach(libraryManager.libraryPaths, id: \.self) { path in
                     Label(path.lastPathComponent, systemImage: "folder.fill")
                         .foregroundColor(.secondary)
@@ -136,6 +146,9 @@ struct ContentView: View {
                         }
                         NavigationLink(value: SidebarItem.deviceAudiobooks) {
                             Label("Audiobooks", systemImage: "book")
+                        }
+                        NavigationLink(value: SidebarItem.devicePlaylists) {
+                            Label("Playlists", systemImage: "music.note.list")
                         }
                     } label: {
                         NavigationLink(value: SidebarItem.devices) {
@@ -181,10 +194,12 @@ struct ContentView: View {
             DeviceAlbumsView()
         case .deviceArtists:
             DeviceArtistsView()
-        case .playlists:
-            Text("Playlists") // placeholder
-        case .playlistDetail(let id):
-            Text("Playlist \(id)") // placeholder
+        case .playlists, .devicePlaylists:
+            DevicePlaylistsView()
+        case .podcasts:
+            PodcastsView()
+        case .playlistDetail:
+            DevicePlaylistsView()
         case .lastfm:
             ScrobblerView()
         case .none:

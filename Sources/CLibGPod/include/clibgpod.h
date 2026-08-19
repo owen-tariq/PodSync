@@ -215,3 +215,65 @@ extern gboolean itdb_artwork_set_thumbnail(Itdb_Artwork *artwork,
                                             GError **error);
 
 #endif /* CLIBGPOD_H */
+#ifndef CLIBGPOD_H_V2
+#define CLIBGPOD_H_V2
+
+// ============================================================
+// PodSync v2 additions — extended track/playlist/podcast access
+// ============================================================
+
+// --- Extended track getters ---
+extern guint32 gpod_track_get_mediatype(Itdb_Track *track);
+extern const char* gpod_track_get_genre_field(Itdb_Track *track);
+extern const char* gpod_track_get_albumartist_field(Itdb_Track *track);
+extern const char* gpod_track_get_composer_field(Itdb_Track *track);
+extern const char* gpod_track_get_description_field(Itdb_Track *track);
+extern const char* gpod_track_get_podcastrss_field(Itdb_Track *track);
+extern const char* gpod_track_get_podcasturl_field(Itdb_Track *track);
+extern const char* gpod_track_get_filetype_field(Itdb_Track *track);
+extern gint32 gpod_track_get_year(Itdb_Track *track);
+extern gint32 gpod_track_get_track_nr(Itdb_Track *track);
+extern gint32 gpod_track_get_cd_nr(Itdb_Track *track);
+extern gint32 gpod_track_get_tracklen(Itdb_Track *track);
+extern gint32 gpod_track_get_size_field(Itdb_Track *track);
+extern gint32 gpod_track_get_bitrate(Itdb_Track *track);
+extern guint32 gpod_track_get_rating(Itdb_Track *track);
+extern time_t gpod_track_get_time_added(Itdb_Track *track);
+extern time_t gpod_track_get_time_released(Itdb_Track *track);
+extern guint8 gpod_track_get_mark_unplayed(Itdb_Track *track);
+
+// --- Extended track setters ---
+extern void gpod_track_set_genre(Itdb_Track *track, const char *genre);
+extern void gpod_track_set_albumartist(Itdb_Track *track, const char *albumartist);
+extern void gpod_track_set_composer(Itdb_Track *track, const char *composer);
+extern void gpod_track_set_year(Itdb_Track *track, gint32 year);
+extern void gpod_track_set_track_nr(Itdb_Track *track, gint32 track_nr);
+extern void gpod_track_set_cd_nr(Itdb_Track *track, gint32 cd_nr);
+extern void gpod_track_set_rating(Itdb_Track *track, guint32 rating);
+extern void gpod_track_set_podcast_meta(Itdb_Track *track,
+                                        const char *podcasturl,
+                                        const char *podcastrss,
+                                        const char *description,
+                                        const char *subtitle,
+                                        time_t time_released,
+                                        guint8 mark_unplayed);
+
+// --- Playlist enumeration & access ---
+extern void** gpod_get_playlists(Itdb_iTunesDB *itdb, uint32_t *count);
+extern void gpod_free_playlist_array(void **arr);
+extern const char* gpod_playlist_get_name(Itdb_Playlist *pl);
+extern guint64 gpod_playlist_get_id(Itdb_Playlist *pl);
+extern int gpod_playlist_is_master(Itdb_Playlist *pl);
+extern int gpod_playlist_is_podcast_pl(Itdb_Playlist *pl);
+extern void gpod_playlist_set_name(Itdb_Playlist *pl, const char *name);
+extern void** gpod_playlist_get_tracks(Itdb_Playlist *pl, uint32_t *count);
+
+// --- libgpod playlist API (verified present in bundled framework) ---
+extern void itdb_playlist_remove(Itdb_Playlist *pl);
+extern Itdb_Playlist* itdb_playlist_podcasts(Itdb_iTunesDB *itdb);
+extern void itdb_playlist_set_podcasts(Itdb_Playlist *pl);
+extern gboolean itdb_playlist_is_mpl(Itdb_Playlist *pl);
+extern gboolean itdb_playlist_is_podcasts(Itdb_Playlist *pl);
+extern guint32 itdb_playlists_number(Itdb_iTunesDB *itdb);
+
+#endif /* CLIBGPOD_H_V2 */

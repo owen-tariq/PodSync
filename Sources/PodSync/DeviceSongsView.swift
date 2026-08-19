@@ -13,6 +13,10 @@ struct DeviceSongsView: View {
     @State private var searchText = ""
     @State private var showDeleteAllConfirm = false
     @State private var showDeleteSelectedConfirm = false
+    @State private var editingTracks: Set<TrackModel.ID>? = nil
+    @State private var sortOrder: [KeyPathComparator<TrackModel>] = [
+        .init(\.displayArtist), .init(\.displayAlbum), .init(\.displayTitle)
+    ]
     
     private var ipodManager: IPodManager {
         deviceManager.ipodManager
@@ -66,6 +70,14 @@ struct DeviceSongsView: View {
             }
         } message: {
             Text("This will permanently delete \(selectedTracks.count) selected song(s) from your iPod.")
+        }
+        .sheet(isPresented: Binding(
+            get: { editingTracks != nil },
+            set: { if !$0 { editingTracks = nil } }
+        )) {
+            if let ids = editingTracks {
+                EditTrackSheet(trackIds: ids)
+            }
         }
     }
     
@@ -176,22 +188,46 @@ struct DeviceSongsView: View {
     // MARK: - Track Table
     
     private var trackTable: some View {
-        Table(filteredTracks, selection: $selectedTracks) {
-            TableColumn("Title") { (track: TrackModel) in
-                Text(track.title ?? "Unknown Title")
+        Table(filteredTracks, selection: $selectedTracks, sortOrder: $sortOrder) {
+            TableColumn("Title", value: \.displayTitle) { (track: TrackModel) in
+                Text(track.displayTitle)
                     .fontWeight(.medium)
             }
-            .width(min: 150, ideal: 300)
-            
-            TableColumn("Artist") { (track: TrackModel) in
-                Text(track.artist ?? "Unknown Artist")
+            .width(min: 150, ideal: 280)
+
+            TableColumn("Artist", value: \.displayArtist) { (track: TrackModel) in
+                Text(track.displayArtist)
             }
-            .width(min: 100, ideal: 200)
-            
-            TableColumn("Album") { (track: TrackModel) in
-                Text(track.album ?? "Unknown Album")
+            .width(min: 100, ideal: 180)
+
+            TableColumn("Album", value: \.displayAlbum) { (track: TrackModel) in
+                Text(track.displayAlbum)
             }
-            .width(min: 100, ideal: 200)
+            .width(min: 100, ideal: 180)
+
+            TableColumn("Genre", value: \.displayGenre) { (track: TrackModel) in
+                Text(track.displayGenre)
+                    .foregroundColor(.secondary)
+            }
+            .width(min: 60, ideal: 100)
+
+            TableColumn("Year", value: \.yearValue) { (track: TrackModel) in
+                Text(track.yearValue > 0 ? String(track.yearValue) : "—")
+                    .foregroundColor(.secondary)
+            }
+            .width(min: 44, ideal: 54)
+
+            TableColumn("Rating", value: \.rating) { (track: TrackModel) in
+                Text(track.starRating > 0 ? String(repeating: "★", count: track.starRating) : "")
+                    .foregroundColor(.yellow)
+            }
+            .width(min: 50, ideal: 70)
+
+            TableColumn("Plays", value: \.playCount) { (track: TrackModel) in
+                Text(track.playCount > 0 ? String(track.playCount) : "—")
+                    .foregroundColor(.secondary)
+            }
+            .width(min: 40, ideal: 50)
         }
         .contextMenu(forSelectionType: TrackModel.ID.self) { selection in
             if selection.count == 1, let id = selection.first,
@@ -202,15 +238,31 @@ struct DeviceSongsView: View {
                 } label: {
                     Label("Play", systemImage: "play.fill")
                 }
-                
+
+                Button {
+                    editingTracks = selection
+                } label: {
+                    Label("Edit Info...", systemImage: "pencil")
+                }
+
+                Button {
+                    let mix = AutoMixEngine.geniusMix(seed: track, tracks: ipodManager.deviceTracks)
+                    let count = AutoMixApplier.apply(mix, to: ipodManager)
+                    print("[Genius] Created \(mix.name) with \(count) tracks")
+                } label: {
+                    Label("Genius Mix from This Song", systemImage: "wand.and.stars")
+                }
+
+                addToPlaylistMenu(selection: selection)
+
                 Button {
                     NSWorkspace.shared.selectFile(track.filePath.path, inFileViewerRootedAtPath: track.filePath.deletingLastPathComponent().path)
                 } label: {
                     Label("Show in Finder", systemImage: "folder")
                 }
-                
+
                 Divider()
-                
+
                 Button(role: .destructive) {
                     let idsToDelete = selection
                     selectedTracks.subtract(selection)
@@ -222,6 +274,16 @@ struct DeviceSongsView: View {
                 }
             } else if selection.count > 1 {
                 // Multi-select context menu
+                Button {
+                    editingTracks = selection
+                } label: {
+                    Label("Edit \(selection.count) Tracks...", systemImage: "pencil")
+                }
+
+                addToPlaylistMenu(selection: selection)
+
+                Divider()
+
                 Button {
                     showDeleteSelectedConfirm = true
                 } label: {
@@ -256,11 +318,30 @@ struct DeviceSongsView: View {
     }
     
     var mediaType: UInt32 = 1 // 1=Audio, 2=Video, 4=Podcast, 8=Audiobook
-    
+
+    // MARK: - Playlist menu
+
+    @ViewBuilder
+    private func addToPlaylistMenu(selection: Set<TrackModel.ID>) -> some View {
+        let playlists = ipodManager.devicePlaylists.filter { !$0.isMaster && !$0.isPodcast }
+        Menu {
+            if playlists.isEmpty {
+                Text("No playlists — create one in the Playlists tab")
+            }
+            ForEach(playlists) { pl in
+                Button(pl.name) {
+                    ipodManager.addTracksToPlaylist(trackUUIDs: selection, playlistId: pl.id)
+                }
+            }
+        } label: {
+            Label("Add to Playlist", systemImage: "text.badge.plus")
+        }
+    }
+
     // MARK: - Filtering
-    
+
     private var filteredTracks: [TrackModel] {
-        let tracks = ipodManager.deviceTracks.filter { track in
+        var tracks = ipodManager.deviceTracks.filter { track in
             if self.mediaType == 2 {
                 return track.ipodMediaType == 2 || track.ipodMediaType == 32 || track.ipodMediaType == 64
             } else if self.mediaType == 4 {
@@ -268,14 +349,17 @@ struct DeviceSongsView: View {
             } else if self.mediaType == 8 {
                 return track.ipodMediaType == 8
             } else {
-                return track.ipodMediaType == 1 || track.ipodMediaType == 0
+                return track.ipodMediaType == 1 || track.ipodMediaType == 0 || track.ipodMediaType == nil
             }
         }
-        guard !searchText.isEmpty else { return tracks }
-        return tracks.filter { track in
-            (track.title?.localizedCaseInsensitiveContains(searchText) == true) ||
-            (track.artist?.localizedCaseInsensitiveContains(searchText) == true) ||
-            (track.album?.localizedCaseInsensitiveContains(searchText) == true)
+        if !searchText.isEmpty {
+            tracks = tracks.filter { track in
+                (track.title?.localizedCaseInsensitiveContains(searchText) == true) ||
+                (track.artist?.localizedCaseInsensitiveContains(searchText) == true) ||
+                (track.album?.localizedCaseInsensitiveContains(searchText) == true) ||
+                (track.genre?.localizedCaseInsensitiveContains(searchText) == true)
+            }
         }
+        return tracks.sorted(using: sortOrder)
     }
 }

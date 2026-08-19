@@ -15,6 +15,58 @@ class LibraryManager: ObservableObject {
         "mp3", "m4a", "m4b", "m4p", "mp4", "m4v", "mov", "aac", "alac", "flac", "wav", "aiff", "ogg"
     ]
 
+    private static let bookmarksKey = "podsync.libraryFolderBookmarks"
+
+    init() {
+        restoreSavedFolders()
+    }
+
+    // MARK: - Persistence
+
+    /// Restore library folders saved from previous launches and rescan them.
+    private func restoreSavedFolders() {
+        guard let bookmarks = UserDefaults.standard.array(forKey: Self.bookmarksKey) as? [Data] else { return }
+
+        var restored: [URL] = []
+        for bookmark in bookmarks {
+            var isStale = false
+            if let url = try? URL(
+                resolvingBookmarkData: bookmark,
+                options: [.withSecurityScope],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                _ = url.startAccessingSecurityScopedResource()
+                if FileManager.default.fileExists(atPath: url.path) {
+                    restored.append(url)
+                }
+            }
+        }
+
+        guard !restored.isEmpty else { return }
+        libraryPaths = restored
+        persistFolders() // refresh any stale bookmarks
+
+        Task {
+            for url in restored {
+                await scanFolder(at: url)
+            }
+        }
+    }
+
+    /// Save the current library folders as security-scoped bookmarks so they
+    /// survive app relaunches.
+    private func persistFolders() {
+        let bookmarks: [Data] = libraryPaths.compactMap { url in
+            try? url.bookmarkData(
+                options: [.withSecurityScope],
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+        }
+        UserDefaults.standard.set(bookmarks, forKey: Self.bookmarksKey)
+    }
+
     // MARK: - Public Methods
 
     /// Presents an NSOpenPanel for the user to select a library folder, then scans it.
@@ -30,6 +82,7 @@ class LibraryManager: ObservableObject {
 
         if !libraryPaths.contains(url) {
             libraryPaths.append(url)
+            persistFolders()
         }
 
         Task {
@@ -46,6 +99,7 @@ class LibraryManager: ObservableObject {
                     if isDir.boolValue {
                         if !libraryPaths.contains(url) {
                             libraryPaths.append(url)
+                            persistFolders()
                         }
                         await scanFolder(at: url)
                     } else {
@@ -107,6 +161,7 @@ class LibraryManager: ObservableObject {
     /// - Parameter url: The library folder URL to remove.
     func removeLibrary(at url: URL) {
         libraryPaths.removeAll { $0 == url }
+        persistFolders()
         let folderPath = url.standardizedFileURL.path
         tracks.removeAll { $0.filePath.standardizedFileURL.path.hasPrefix(folderPath) }
     }

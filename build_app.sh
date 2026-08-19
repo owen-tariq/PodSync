@@ -46,9 +46,9 @@ cat > "$CONTENTS_DIR/Info.plist" <<EOF
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.2</string>
+    <string>2.0.0</string>
     <key>CFBundleVersion</key>
-    <string>2</string>
+    <string>3</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
@@ -64,5 +64,8 @@ echo "Code signing the app..."
 codesign --force --deep --sign - "$APP_DIR"
 
 echo "App bundle created successfully at $APP_DIR"
-echo "Opening PodSync..."
-open "$APP_DIR"
+
+if [ -z "$CI" ]; then
+    echo "Opening PodSync..."
+    open "$APP_DIR"
+fi
