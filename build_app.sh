@@ -64,5 +64,8 @@ echo "Code signing the app..."
 codesign --force --deep --sign - "$APP_DIR"
 
 echo "App bundle created successfully at $APP_DIR"
-echo "Opening PodSync..."
-open "$APP_DIR"
+
+if [ -z "$CI" ]; then
+    echo "Opening PodSync..."
+    open "$APP_DIR"
+fi
