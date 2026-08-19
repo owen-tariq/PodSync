@@ -70,6 +70,9 @@ class ArtworkCache: ObservableObject {
     static let shared = ArtworkCache()
 
     @Published var cache: [String: NSImage] = [:]
+    /// Albums we've checked everywhere and found NO artwork for —
+    /// lets the UI show a definitive "missing artwork" marker.
+    @Published var misses: Set<String> = []
     private var loading: Set<String> = []
 
     // MARK: Disk cache
@@ -95,6 +98,7 @@ class ArtworkCache: ObservableObject {
         try? data.write(to: Self.diskURL(forAlbum: album))
         if let image = NSImage(data: data) {
             cache[album] = image
+            misses.remove(album)
         }
     }
 
@@ -125,12 +129,19 @@ class ArtworkCache: ObservableObject {
             await MainActor.run {
                 if let result = result {
                     self.cache[albumName] = result
+                } else {
+                    self.misses.insert(albumName)
                 }
                 self.loading.remove(albumName)
             }
         }
 
         return nil
+    }
+
+    /// Whether an album is definitively known to have no artwork anywhere.
+    func isMissing(_ albumName: String) -> Bool {
+        misses.contains(albumName)
     }
     
     /// Extract embedded artwork from an audio file using AVFoundation.

@@ -8,6 +8,7 @@ import AVFoundation
 struct DeviceSongsView: View {
     @EnvironmentObject var deviceManager: DeviceManager
     @EnvironmentObject var audioPlayer: AudioPlayerManager
+    @StateObject private var artworkCache = ArtworkCache.shared
     
     @State private var selectedTracks = Set<TrackModel.ID>()
     @State private var searchText = ""
@@ -190,10 +191,13 @@ struct DeviceSongsView: View {
     private var trackTable: some View {
         Table(filteredTracks, selection: $selectedTracks, sortOrder: $sortOrder) {
             TableColumn("Title", value: \.displayTitle) { (track: TrackModel) in
-                Text(track.displayTitle)
-                    .fontWeight(.medium)
+                HStack(spacing: 8) {
+                    trackArtworkThumb(for: track)
+                    Text(track.displayTitle)
+                        .fontWeight(.medium)
+                }
             }
-            .width(min: 150, ideal: 280)
+            .width(min: 170, ideal: 300)
 
             TableColumn("Artist", value: \.displayArtist) { (track: TrackModel) in
                 Text(track.displayArtist)
@@ -318,6 +322,39 @@ struct DeviceSongsView: View {
     }
     
     var mediaType: UInt32 = 1 // 1=Audio, 2=Video, 4=Podcast, 8=Audiobook
+
+    // MARK: - Artwork thumbnails
+
+    @ViewBuilder
+    private func trackArtworkThumb(for track: TrackModel) -> some View {
+        if let image = artworkCache.artwork(for: track.displayAlbum, from: [track]) {
+            Image(nsImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 26, height: 26)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+        } else if artworkCache.isMissing(track.displayAlbum) {
+            // Definitively no artwork anywhere — make it easy to spot & fix
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.orange.opacity(0.15))
+                .frame(width: 26, height: 26)
+                .overlay(
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(.orange)
+                )
+                .help("No artwork — right-click → Edit Info → Find Artwork")
+        } else {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.secondary.opacity(0.12))
+                .frame(width: 26, height: 26)
+                .overlay(
+                    Image(systemName: "music.note")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                )
+        }
+    }
 
     // MARK: - Playlist menu
 
