@@ -287,6 +287,21 @@ struct IPodDropTargetModifier: ViewModifier {
             }
         }
 
+        // No usable tags? Guess from the filename ("Artist - Title", "01 - Title"...)
+        let fallbackTitle = url.deletingPathExtension().lastPathComponent
+        if meta.artist == "Unknown Artist" || meta.title == fallbackTitle {
+            let guess = FilenameTagParser.parse(filename: url.lastPathComponent)
+            if meta.artist == "Unknown Artist", let artist = guess.artist {
+                meta.artist = artist
+            }
+            if meta.title == fallbackTitle, let title = guess.title {
+                meta.title = title
+            }
+            if meta.trackNumber == nil {
+                meta.trackNumber = guess.trackNumber
+            }
+        }
+
         return meta
     }
 

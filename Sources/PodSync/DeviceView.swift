@@ -113,6 +113,9 @@ struct DeviceView: View {
                     .font(.headline)
                     .foregroundColor(.secondary)
             }
+
+            StorageBarView(device: ipod, tracks: deviceManager.ipodManager.deviceTracks)
+                .padding(.horizontal, 40)
             
             // Progress or Sync Button
             if isSyncing {

@@ -42,6 +42,31 @@ struct PodSyncApp: App {
         Settings {
             SettingsView()
         }
+
+        MenuBarExtra("PodSync", systemImage: "ipod") {
+            if let ipod = deviceManager.connectedIPod {
+                Text("\(ipod.name) — \(ipod.availableCapacityFormatted) free")
+                Divider()
+                Button("Refresh Auto Mixes") {
+                    _ = AutoMixApplier.refreshAllMixes(ipodManager: deviceManager.ipodManager)
+                }
+                Button("Sync All Podcasts") {
+                    Task { @MainActor in
+                        for sub in PodcastManager.shared.subscriptions {
+                            _ = await PodcastManager.shared.syncSubscription(sub, to: deviceManager.ipodManager, latest: 5)
+                        }
+                    }
+                }
+                Divider()
+                Button("Eject iPod") {
+                    deviceManager.ipodManager.eject()
+                }
+            } else {
+                Text("No iPod connected")
+            }
+            Divider()
+            Text(AppInfo.versionString)
+        }
     }
 
     private func addFileToLibrary() {
@@ -73,6 +98,8 @@ enum SidebarItem: Hashable {
     case devicePodcasts
     case deviceAudiobooks
     case devicePlaylists
+    case diff
+    case stats
     case playlistDetail(UUID)
     case lastfm
 }
@@ -137,6 +164,10 @@ struct ContentView: View {
                     Label("Podcasts", systemImage: "antenna.radiowaves.left.and.right")
                 }
 
+                NavigationLink(value: SidebarItem.diff) {
+                    Label("Library ↔ iPod", systemImage: "arrow.left.arrow.right")
+                }
+
                 ForEach(libraryManager.libraryPaths, id: \.self) { path in
                     Label(path.lastPathComponent, systemImage: "folder.fill")
                         .foregroundColor(.secondary)
@@ -161,6 +192,9 @@ struct ContentView: View {
                         }
                         NavigationLink(value: SidebarItem.devicePlaylists) {
                             Label("Playlists", systemImage: "music.note.list")
+                        }
+                        NavigationLink(value: SidebarItem.stats) {
+                            Label("Stats", systemImage: "chart.bar.xaxis")
                         }
                     } label: {
                         NavigationLink(value: SidebarItem.devices) {
@@ -210,6 +244,10 @@ struct ContentView: View {
             DevicePlaylistsView()
         case .podcasts:
             PodcastsView()
+        case .diff:
+            DiffView()
+        case .stats:
+            StatsView()
         case .playlistDetail:
             DevicePlaylistsView()
         case .lastfm:

@@ -105,6 +105,27 @@ struct DevicePlaylistsView: View {
             }
             .buttonStyle(.bordered)
 
+            Menu {
+                Button {
+                    applyResult = PlaylistBackup.backupViaPanel(
+                        ipodManager: ipodManager,
+                        deviceName: deviceManager.connectedIPod?.name ?? "iPod"
+                    )
+                } label: {
+                    Label("Backup Playlists...", systemImage: "square.and.arrow.down")
+                }
+                Button {
+                    applyResult = PlaylistBackup.restoreViaPanel(ipodManager: ipodManager)
+                } label: {
+                    Label("Restore Playlists...", systemImage: "square.and.arrow.up")
+                }
+            } label: {
+                Label("Backup", systemImage: "externaldrive")
+            }
+            .menuStyle(.borderedButton)
+            .frame(width: 110)
+            .disabled(deviceManager.connectedIPod == nil)
+
             Button {
                 let result = AutoMixApplier.refreshAllMixes(ipodManager: ipodManager)
                 applyResult = result.mixes > 0

@@ -143,6 +143,11 @@ class ArtworkCache: ObservableObject {
     func isMissing(_ albumName: String) -> Bool {
         misses.contains(albumName)
     }
+
+    /// Whether artwork for the album exists in the on-disk cache.
+    nonisolated static func hasDiskArtwork(album: String) -> Bool {
+        FileManager.default.fileExists(atPath: diskURL(forAlbum: album).path)
+    }
     
     /// Extract embedded artwork from an audio file using AVFoundation.
     nonisolated static func extractArtwork(from url: URL) -> NSImage? {

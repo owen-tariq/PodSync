@@ -15,6 +15,8 @@ struct DeviceSongsView: View {
     @State private var showDeleteAllConfirm = false
     @State private var showDeleteSelectedConfirm = false
     @State private var editingTracks: Set<TrackModel.ID>? = nil
+    @State private var showDuplicateFinder = false
+    @StateObject private var artworkFixer = ArtworkFixer.shared
     @State private var sortOrder: [KeyPathComparator<TrackModel>] = [
         .init(\.displayArtist), .init(\.displayAlbum), .init(\.displayTitle)
     ]
@@ -80,6 +82,34 @@ struct DeviceSongsView: View {
                 EditTrackSheet(trackIds: ids)
             }
         }
+        .sheet(isPresented: $showDuplicateFinder) {
+            DuplicateFinderSheet()
+        }
+        .alert("Artwork Fixer", isPresented: Binding(
+            get: { artworkFixer.summary != nil },
+            set: { if !$0 { artworkFixer.summary = nil } }
+        )) {
+            Button("OK") { artworkFixer.summary = nil }
+        } message: {
+            Text(artworkFixer.summary ?? "")
+        }
+        .overlay {
+            if artworkFixer.isRunning {
+                ZStack {
+                    Color.black.opacity(0.4)
+                    VStack(spacing: 12) {
+                        ProgressView(value: Double(artworkFixer.progress), total: Double(max(1, artworkFixer.total)))
+                            .frame(width: 220)
+                        Text("Fixing artwork... (\(artworkFixer.progress) / \(artworkFixer.total) albums)")
+                            .bold()
+                    }
+                    .padding(20)
+                    .background(Color(NSColor.windowBackgroundColor))
+                    .cornerRadius(12)
+                }
+                .ignoresSafeArea()
+            }
+        }
     }
     
     // MARK: - Header Bar
@@ -117,6 +147,26 @@ struct DeviceSongsView: View {
                 }
                 .buttonStyle(.bordered)
                 
+                // Tools — artwork fixer, duplicate finder
+                if mediaType == 1 {
+                    Menu {
+                        Button {
+                            Task { await artworkFixer.fixAll(ipodManager: ipodManager) }
+                        } label: {
+                            Label("Fix All Missing Artwork", systemImage: "wand.and.stars")
+                        }
+                        Button {
+                            showDuplicateFinder = true
+                        } label: {
+                            Label("Find Duplicates...", systemImage: "doc.on.doc")
+                        }
+                    } label: {
+                        Label("Tools", systemImage: "wrench.and.screwdriver")
+                    }
+                    .menuStyle(.borderedButton)
+                    .frame(width: 100)
+                }
+
                 // Refresh — reload tracks from iPod database
                 Button {
                     ipodManager.reloadTracks()

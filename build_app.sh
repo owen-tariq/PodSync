@@ -2,8 +2,8 @@
 set -e
 
 # App version — keep in sync with Sources/PodSync/AppInfo.swift
-VERSION="2.2.1"
-BUILD="7"
+VERSION="2.3.0"
+BUILD="8"
 
 echo "Building PodSync..."
 swift build -c release

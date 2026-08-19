@@ -423,6 +423,16 @@ class IPodManager: ObservableObject {
         return changed
     }
 
+    /// Apply edits addressed by stable iPod track ids (safe across reloads,
+    /// unlike UUIDs which are regenerated on every reload).
+    @discardableResult
+    func updateTracks(ipodIds: [UInt32], edit: TrackEdit) -> Bool {
+        let idSet = Set(ipodIds)
+        let uuids = Set(deviceTracks.filter { t in t.ipodTrackId.map(idSet.contains) ?? false }.map(\.id))
+        guard !uuids.isEmpty else { return false }
+        return updateTracks(ids: uuids, edit: edit)
+    }
+
     // MARK: - Playlists
 
     /// Find the raw playlist pointer for a PlaylistModel id.
