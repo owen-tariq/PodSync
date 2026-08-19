@@ -68,3 +68,12 @@ jobs:
           git add -A
           git commit -q -m "logs for run ${{ github.run_id }} (${{ job.status }})"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-logs:ci-logs
+
+      - name: Publish GitHub Release (main only)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="PodSync v2.0.0 — Podcast manager (search/subscribe/download/retention), playlists + smart playlists, Spotify-style auto mixes from your listening history, Genius mix, on-device metadata editing with batch edit, artwork lookup + configurable artwork resize, persistent library folders, sync plan preview, multi-format conversion (FLAC/WAV/AIFF built-in; OGG/Opus/WMA + MP3 via ffmpeg), sortable columns, Settings window."
+          gh release create v2.0.0 --title "PodSync v2.0.0" --notes "$NOTES" dist/PodSync.dmg \
+            || gh release upload v2.0.0 dist/PodSync.dmg --clobber
