@@ -21,6 +21,38 @@ struct TrackModel: Identifiable, Hashable, Equatable, Sendable {
     // Used when track is loaded directly from an iPod database
     var ipodTrackId: UInt32? = nil
 
+    /// iPod media type (1=Audio, 2=Video, 4=Podcast, 8=Audiobook, 32/64=Music Video/TV)
+    var ipodMediaType: UInt32? = nil
+
+    /// Star rating stored on the iPod (0–100, 20 per star)
+    var rating: Int = 0
+
+    /// Play count reported by the iPod database
+    var playCount: Int = 0
+
+    /// Bitrate in kbps (0 if unknown)
+    var bitrate: Int = 0
+
+    /// Podcast episode release date (podcasts only)
+    var releaseDate: Date? = nil
+
+    /// Podcast RSS feed URL this episode came from (podcasts only)
+    var podcastFeedURL: String? = nil
+
+    /// Whether a podcast/audiobook is still marked unplayed (blue dot on iPod)
+    var isUnplayed: Bool = false
+
+    // MARK: - Sort-friendly accessors (non-optional, for Table sorting)
+
+    var displayTitle: String { title ?? "Unknown Title" }
+    var displayArtist: String { artist ?? "Unknown Artist" }
+    var displayAlbum: String { album ?? "Unknown Album" }
+    var displayGenre: String { genre ?? "" }
+    var yearValue: Int { year ?? 0 }
+
+    /// Star rating 0–5 derived from the raw 0–100 value.
+    var starRating: Int { min(5, max(0, rating / 20)) }
+
     /// Returns the duration formatted as MM:SS.
     var durationFormatted: String {
         let totalSeconds = Int(duration)

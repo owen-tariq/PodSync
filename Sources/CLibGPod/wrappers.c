@@ -231,3 +231,160 @@ const char* gpod_track_get_artist_field(Itdb_Track *track) {
     if (!track) return NULL;
     return track->artist;
 }
+
+// ============================================================
+// PodSync v2 additions
+// ============================================================
+
+// --- Extended track getters ---
+
+const char* gpod_track_get_genre_field(Itdb_Track *track)       { return track ? track->genre : NULL; }
+const char* gpod_track_get_albumartist_field(Itdb_Track *track) { return track ? track->albumartist : NULL; }
+const char* gpod_track_get_composer_field(Itdb_Track *track)    { return track ? track->composer : NULL; }
+const char* gpod_track_get_description_field(Itdb_Track *track) { return track ? track->description : NULL; }
+const char* gpod_track_get_podcastrss_field(Itdb_Track *track)  { return track ? track->podcastrss : NULL; }
+const char* gpod_track_get_podcasturl_field(Itdb_Track *track)  { return track ? track->podcasturl : NULL; }
+const char* gpod_track_get_filetype_field(Itdb_Track *track)    { return track ? track->filetype : NULL; }
+gint32  gpod_track_get_year(Itdb_Track *track)       { return track ? track->year : 0; }
+gint32  gpod_track_get_track_nr(Itdb_Track *track)   { return track ? track->track_nr : 0; }
+gint32  gpod_track_get_cd_nr(Itdb_Track *track)      { return track ? track->cd_nr : 0; }
+gint32  gpod_track_get_tracklen(Itdb_Track *track)   { return track ? track->tracklen : 0; }
+gint32  gpod_track_get_size_field(Itdb_Track *track) { return track ? track->size : 0; }
+gint32  gpod_track_get_bitrate(Itdb_Track *track)    { return track ? track->bitrate : 0; }
+guint32 gpod_track_get_rating(Itdb_Track *track)     { return track ? track->rating : 0; }
+time_t  gpod_track_get_time_added(Itdb_Track *track)    { return track ? track->time_added : 0; }
+time_t  gpod_track_get_time_released(Itdb_Track *track) { return track ? track->time_released : 0; }
+guint8  gpod_track_get_mark_unplayed(Itdb_Track *track) { return track ? track->mark_unplayed : 0; }
+
+// --- Extended track setters ---
+
+static void gpod_replace_string(gchar **field, const char *value) {
+    if (*field) free(*field);
+    *field = value ? strdup(value) : NULL;
+}
+
+void gpod_track_set_genre(Itdb_Track *track, const char *genre) {
+    if (!track) return;
+    gpod_replace_string(&track->genre, genre);
+}
+
+void gpod_track_set_albumartist(Itdb_Track *track, const char *albumartist) {
+    if (!track) return;
+    gpod_replace_string(&track->albumartist, albumartist);
+}
+
+void gpod_track_set_composer(Itdb_Track *track, const char *composer) {
+    if (!track) return;
+    gpod_replace_string(&track->composer, composer);
+}
+
+void gpod_track_set_year(Itdb_Track *track, gint32 year)         { if (track) track->year = year; }
+void gpod_track_set_track_nr(Itdb_Track *track, gint32 track_nr) { if (track) track->track_nr = track_nr; }
+void gpod_track_set_cd_nr(Itdb_Track *track, gint32 cd_nr)       { if (track) track->cd_nr = cd_nr; }
+void gpod_track_set_rating(Itdb_Track *track, guint32 rating)    { if (track) track->rating = rating; }
+
+void gpod_track_set_podcast_meta(Itdb_Track *track,
+                                 const char *podcasturl,
+                                 const char *podcastrss,
+                                 const char *description,
+                                 const char *subtitle,
+                                 time_t time_released,
+                                 guint8 mark_unplayed) {
+    if (!track) return;
+    if (podcasturl)  gpod_replace_string(&track->podcasturl, podcasturl);
+    if (podcastrss)  gpod_replace_string(&track->podcastrss, podcastrss);
+    if (description) gpod_replace_string(&track->description, description);
+    if (subtitle)    gpod_replace_string(&track->subtitle, subtitle);
+    if (time_released > 0) track->time_released = time_released;
+    track->mark_unplayed = mark_unplayed;
+    track->remember_playback_position = 1;
+    track->skip_when_shuffling = 1;
+    track->flag4 = 1; // show Title/Album on podcast screen
+}
+
+// --- Playlist access ---
+// Partial mirror of libgpod's Itdb_Playlist struct. Only the leading fields
+// (up to podcastflag) are accessed; layout matches libgpod itdb.h.
+struct _MyItdb_Playlist {
+    Itdb_iTunesDB *itdb;
+    gchar *name;
+    guint8 type;
+    guint8 flag1;
+    guint8 flag2;
+    guint8 flag3;
+    gint  num;
+    struct _MyGList *members;
+    gboolean is_spl;
+    time_t timestamp;
+    guint64 id;
+    guint32 sortorder;
+    guint32 podcastflag;
+    // ... SPL structs follow; never accessed here
+};
+
+// Mirror of Itdb_iTunesDB leading fields (tracks, playlists)
+struct _MyItdb_iTunesDB2 {
+    struct _MyGList *tracks;
+    struct _MyGList *playlists;
+};
+
+void** gpod_get_playlists(Itdb_iTunesDB *itdb, uint32_t *count) {
+    if (!itdb) { *count = 0; return NULL; }
+    struct _MyItdb_iTunesDB2 *my_db = (struct _MyItdb_iTunesDB2 *)itdb;
+    struct _MyGList *l = my_db->playlists;
+    uint32_t c = 0;
+    while (l) { c++; l = l->next; }
+    *count = c;
+    if (c == 0) return NULL;
+    void **arr = malloc(c * sizeof(void*));
+    l = my_db->playlists;
+    c = 0;
+    while (l) { arr[c++] = l->data; l = l->next; }
+    return arr;
+}
+
+void gpod_free_playlist_array(void **arr) {
+    if (arr) free(arr);
+}
+
+const char* gpod_playlist_get_name(Itdb_Playlist *pl) {
+    if (!pl) return NULL;
+    return ((struct _MyItdb_Playlist *)pl)->name;
+}
+
+guint64 gpod_playlist_get_id(Itdb_Playlist *pl) {
+    if (!pl) return 0;
+    return ((struct _MyItdb_Playlist *)pl)->id;
+}
+
+int gpod_playlist_is_master(Itdb_Playlist *pl) {
+    if (!pl) return 0;
+    return itdb_playlist_is_mpl(pl) ? 1 : 0;
+}
+
+int gpod_playlist_is_podcast_pl(Itdb_Playlist *pl) {
+    if (!pl) return 0;
+    return itdb_playlist_is_podcasts(pl) ? 1 : 0;
+}
+
+void gpod_playlist_set_name(Itdb_Playlist *pl, const char *name) {
+    if (!pl || !name) return;
+    struct _MyItdb_Playlist *mp = (struct _MyItdb_Playlist *)pl;
+    if (mp->name) free(mp->name);
+    mp->name = strdup(name);
+}
+
+void** gpod_playlist_get_tracks(Itdb_Playlist *pl, uint32_t *count) {
+    if (!pl) { *count = 0; return NULL; }
+    struct _MyItdb_Playlist *mp = (struct _MyItdb_Playlist *)pl;
+    struct _MyGList *l = mp->members;
+    uint32_t c = 0;
+    while (l) { c++; l = l->next; }
+    *count = c;
+    if (c == 0) return NULL;
+    void **arr = malloc(c * sizeof(void*));
+    l = mp->members;
+    c = 0;
+    while (l) { arr[c++] = l->data; l = l->next; }
+    return arr;
+}
