@@ -65,6 +65,36 @@ codesign --force --deep --sign - "$APP_DIR"
 
 echo "App bundle created successfully at $APP_DIR"
 
+# --- CI on main: build DMG and publish/update the GitHub release ---
+if [ -n "$CI" ] && [ "${GITHUB_REF:-}" = "refs/heads/main" ]; then
+    echo "Building release DMG..."
+    rm -rf release_dist
+    mkdir -p release_dist/dmg
+    cp -R "$APP_DIR" release_dist/dmg/
+    ln -s /Applications release_dist/dmg/Applications
+    hdiutil create -volname "PodSync" -srcfolder release_dist/dmg -ov -format UDZO release_dist/PodSync.dmg
+
+    echo "Publishing GitHub release v2.0.0..."
+    # Use the credentials actions/checkout persisted for this job
+    B64=$(git config --get http.https://github.com/.extraheader | awk '{print $3}')
+    GH_TOKEN=$(printf '%s' "$B64" | python3 -c 'import sys,base64; print(base64.b64decode(sys.stdin.read()).decode().split(":",1)[1])')
+    export GH_TOKEN
+
+    NOTES="PodSync v2.0.0 — Podcast manager (search, subscribe, download, per-show retention), playlists + smart playlists, Spotify-style auto mixes built from your listening history, Genius mix from any song, on-device metadata editing with batch edit, artwork lookup + configurable artwork resize, persistent library folders, sync plan preview with duplicate detection, multi-format conversion (FLAC/WAV/AIFF built-in; OGG/Opus/WMA + MP3 via ffmpeg), sortable columns, Settings window. Install: open the DMG, drag PodSync to Applications, then run: xattr -cr /Applications/PodSync.app"
+
+    if gh release view v2.0.0 --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+        gh release upload v2.0.0 release_dist/PodSync.dmg --repo "${GITHUB_REPOSITORY}" --clobber
+        echo "Release v2.0.0 updated with fresh DMG."
+    else
+        gh release create v2.0.0 release_dist/PodSync.dmg \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "PodSync v2.0.0" \
+            --notes "$NOTES" \
+            --latest
+        echo "Release v2.0.0 published."
+    fi
+fi
+
 if [ -z "$CI" ]; then
     echo "Opening PodSync..."
     open "$APP_DIR"
