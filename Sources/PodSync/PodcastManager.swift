@@ -106,6 +106,85 @@ final class PodcastManager: ObservableObject {
         }
     }
 
+    // MARK: - Charts (Apple public marketing API — free, no key)
+
+    /// Top podcasts chart for the user's country (falls back to US).
+    /// Returns the localized country name and the ranked shows.
+    func topCharts(limit: Int = 25) async -> (country: String, results: [PodcastSearchResult]) {
+        let regionCode = Locale.current.region?.identifier ?? "US"
+        let country = Locale.current.localizedString(forRegionCode: regionCode) ?? regionCode
+
+        struct ChartResponse: Codable {
+            struct Feed: Codable {
+                struct Item: Codable {
+                    var id: String
+                    var name: String
+                    var artistName: String?
+                }
+                var results: [Item]
+            }
+            var feed: Feed
+        }
+
+        func fetchChart(region: String) async -> ChartResponse? {
+            guard let url = URL(string: "https://rss.marketingtools.apple.com/api/v2/\(region.lowercased())/podcasts/top/\(limit)/podcasts.json") else { return nil }
+            guard let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+            return try? JSONDecoder().decode(ChartResponse.self, from: data)
+        }
+
+        var chart = await fetchChart(region: regionCode)
+        if chart == nil || chart?.feed.results.isEmpty != false {
+            chart = await fetchChart(region: "us")
+        }
+        guard let chart = chart, !chart.feed.results.isEmpty else {
+            lastError = "Could not load the podcast charts."
+            return (country, [])
+        }
+
+        // Resolve RSS feed URLs for the charted shows in one lookup call
+        struct LookupResponse: Codable {
+            struct Item: Codable {
+                var collectionId: Int?
+                var collectionName: String?
+                var artistName: String?
+                var feedUrl: String?
+                var artworkUrl600: String?
+                var artworkUrl100: String?
+                var trackCount: Int?
+                var primaryGenreName: String?
+            }
+            var results: [Item]
+        }
+
+        var comps = URLComponents(string: "https://itunes.apple.com/lookup")!
+        comps.queryItems = [URLQueryItem(name: "id", value: chart.feed.results.map(\.id).joined(separator: ","))]
+        guard let lookupURL = comps.url,
+              let (lookupData, _) = try? await URLSession.shared.data(from: lookupURL),
+              let lookup = try? JSONDecoder().decode(LookupResponse.self, from: lookupData) else {
+            lastError = "Could not resolve chart feeds."
+            return (country, [])
+        }
+
+        var byId: [String: LookupResponse.Item] = [:]
+        for item in lookup.results {
+            if let cid = item.collectionId { byId[String(cid)] = item }
+        }
+
+        var results: [PodcastSearchResult] = []
+        for entry in chart.feed.results {
+            guard let item = byId[entry.id], let feed = item.feedUrl else { continue }
+            results.append(PodcastSearchResult(
+                title: item.collectionName ?? entry.name,
+                author: item.artistName ?? entry.artistName,
+                feedURL: feed,
+                artworkURL: item.artworkUrl600 ?? item.artworkUrl100,
+                episodeCount: item.trackCount,
+                genre: item.primaryGenreName
+            ))
+        }
+        return (country, results)
+    }
+
     // MARK: - Subscriptions
 
     func isSubscribed(feedURL: String) -> Bool {

@@ -81,7 +81,7 @@ struct PodcastsView: View {
             Button {
                 showSearch = true
             } label: {
-                Label("Search Podcasts", systemImage: "magnifyingglass")
+                Label("Browse & Search", systemImage: "chart.bar.doc.horizontal")
             }
             .buttonStyle(.bordered)
 
@@ -202,14 +202,14 @@ struct PodcastsView: View {
             Text("No Podcast Subscriptions")
                 .font(.title2)
                 .fontWeight(.medium)
-            Text("Search the podcast directory or add an RSS feed URL to subscribe.\nEpisodes you sync appear in the Podcasts menu on your iPod.")
+            Text("Browse the top charts, search the directory, or add an RSS feed URL.\nEpisodes you sync appear in the Podcasts menu on your iPod.")
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             HStack {
                 Button {
                     showSearch = true
                 } label: {
-                    Label("Search Podcasts", systemImage: "magnifyingglass")
+                    Label("Browse & Search", systemImage: "chart.bar.doc.horizontal")
                 }
                 Button {
                     showAddFeed = true
@@ -405,6 +405,8 @@ struct PodcastSearchSheet: View {
     @State private var isSearching = false
     @State private var subscribingFeed: String? = nil
     @State private var previewResult: PodcastSearchResult? = nil
+    @State private var isChartMode = true
+    @State private var chartCountry: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -414,16 +416,39 @@ struct PodcastSearchSheet: View {
                     .onSubmit { runSearch() }
                 Button("Search") { runSearch() }
                     .disabled(searchTerm.trimmingCharacters(in: .whitespaces).isEmpty)
+                if !isChartMode {
+                    Button {
+                        loadCharts()
+                    } label: {
+                        Label("Charts", systemImage: "chart.bar.fill")
+                    }
+                    .help("Back to the top podcasts chart")
+                }
                 Button("Done") { dismiss() }
             }
             .padding(12)
+
+            if isChartMode, !results.isEmpty {
+                HStack {
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundColor(.orange)
+                    Text("Top Podcasts\(chartCountry.map { " in \($0)" } ?? "")")
+                        .font(.headline)
+                    Spacer()
+                    Text("Apple Podcasts charts, updated daily")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
 
             Divider()
 
             if isSearching {
                 VStack {
                     ProgressView()
-                    Text("Searching the podcast directory...")
+                    Text(isChartMode ? "Loading the charts..." : "Searching the podcast directory...")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.top, 4)
@@ -439,8 +464,15 @@ struct PodcastSearchSheet: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(results) { result in
+                List(Array(results.enumerated()), id: \.element.id) { index, result in
                     HStack(spacing: 10) {
+                        if isChartMode {
+                            Text("\(index + 1)")
+                                .font(.system(.title3, design: .rounded))
+                                .fontWeight(.bold)
+                                .foregroundColor(index < 3 ? .orange : .secondary)
+                                .frame(width: 28, alignment: .trailing)
+                        }
                         AsyncImage(url: result.artworkURL.flatMap { URL(string: $0) }) { image in
                             image.resizable().aspectRatio(contentMode: .fill)
                         } placeholder: {
@@ -502,16 +534,34 @@ struct PodcastSearchSheet: View {
                 .listStyle(.inset)
             }
         }
-        .frame(width: 620, height: 480)
+        .frame(width: 620, height: 520)
         .sheet(item: $previewResult) { result in
             PodcastPreviewSheet(result: result)
+        }
+        .task {
+            if results.isEmpty {
+                loadCharts()
+            }
         }
     }
 
     private func runSearch() {
+        isChartMode = false
         isSearching = true
         Task {
             results = await podcastManager.search(term: searchTerm)
+            isSearching = false
+        }
+    }
+
+    private func loadCharts() {
+        isChartMode = true
+        isSearching = true
+        searchTerm = ""
+        Task {
+            let charts = await podcastManager.topCharts(limit: 25)
+            chartCountry = charts.country
+            results = charts.results
             isSearching = false
         }
     }
