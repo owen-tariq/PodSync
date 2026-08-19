@@ -48,6 +48,8 @@ struct SettingsView: View {
             Text("Free, open-source iPod management for macOS.")
                 .font(.caption)
                 .foregroundColor(.secondary)
+            Link("owen-tariq.github.io/PodSync", destination: URL(string: "https://owen-tariq.github.io/PodSync/")!)
+                .font(.caption)
             Link("github.com/owen-tariq/PodSync", destination: URL(string: "https://github.com/owen-tariq/PodSync")!)
                 .font(.caption)
         }

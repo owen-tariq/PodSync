@@ -3,7 +3,7 @@ set -e
 
 # App version — keep in sync with Sources/PodSync/AppInfo.swift
 VERSION="2.3.0"
-BUILD="8"
+BUILD="9"
 
 echo "Building PodSync..."
 swift build -c release
@@ -89,7 +89,7 @@ if [ -n "$CI" ] && [ "${GITHUB_REF:-}" = "refs/heads/main" ]; then
     GH_TOKEN=$(printf '%s' "$B64" | python3 -c 'import sys,base64; print(base64.b64decode(sys.stdin.read()).decode().split(":",1)[1])')
     export GH_TOKEN
 
-    NOTES="PodSync v$VERSION — Podcast manager (search, subscribe, download, per-show retention), playlists + smart playlists, Spotify-style auto mixes built from your listening history, Genius mix from any song, on-device metadata editing with batch edit, artwork lookup + configurable artwork resize, persistent library folders, sync plan preview with duplicate detection, multi-format conversion (FLAC/WAV/AIFF built-in; OGG/Opus/WMA + MP3 via ffmpeg), sortable columns, Settings window. Install: open the DMG, drag PodSync to Applications, then run: xattr -cr /Applications/PodSync.app"
+    NOTES="PodSync v$VERSION — Podcast manager (search, subscribe, download, per-show retention), playlists + smart playlists, Spotify-style auto mixes built from your listening history, Genius mix from any song, on-device metadata editing with batch edit, artwork lookup + configurable artwork resize, persistent library folders, sync plan preview with duplicate detection, multi-format conversion (FLAC/WAV/AIFF built-in; OGG/Opus/WMA + MP3 via ffmpeg), sortable columns, Settings window. Install: open the DMG, drag PodSync to Applications, then run: xattr -cr /Applications/PodSync.app — Website: https://owen-tariq.github.io/PodSync/"
 
     if gh release view "v$VERSION" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
         gh release upload "v$VERSION" release_dist/PodSync.dmg --repo "${GITHUB_REPOSITORY}" --clobber

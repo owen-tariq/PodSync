@@ -4,6 +4,8 @@
   <p>A native macOS application for managing classic iPods without iTunes.</p>
 </div>
 
+**Website: [owen-tariq.github.io/PodSync](https://owen-tariq.github.io/PodSync/)** · [Download](https://github.com/owen-tariq/PodSync/releases/latest)
+
 PodSync syncs music, podcasts, audiobooks, and video to click-wheel iPods (Classic, Nano, Mini) over USB. It writes the iPod's own database directly via libgpod, so everything appears in the device's native menus. It is free and open source.
 
 ## Features

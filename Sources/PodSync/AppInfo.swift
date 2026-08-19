@@ -4,7 +4,7 @@ import Foundation
 /// Keep `version`/`build` in sync with build_app.sh (which writes Info.plist).
 enum AppInfo {
     static let version = "2.3.0"
-    static let build = "8"
+    static let build = "9"
 
     /// Version as reported by the app bundle, falling back to the compiled-in
     /// constant when running outside a packaged .app (e.g. swift run).
