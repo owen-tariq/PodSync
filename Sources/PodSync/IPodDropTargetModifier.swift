@@ -52,7 +52,7 @@ struct IPodDropTargetModifier: ViewModifier {
     }
 
     /// Extensions synced without conversion.
-    static let nativeExtensions: Set<String> = ["mp3", "m4a", "m4b", "m4p", "mp4", "m4v", "mov", "wav", "aif", "aiff"]
+    nonisolated static let nativeExtensions: Set<String> = ["mp3", "m4a", "m4b", "m4p", "mp4", "m4v", "mov", "wav", "aif", "aiff"]
 
     func body(content: Content) -> some View {
         content
