@@ -31,6 +31,18 @@ PodSync syncs music, podcasts, audiobooks, and video to click-wheel iPods (Class
 - Auto mixes generated locally from listening history — play counts and ratings read back from the device: daily genre mixes, least-played rediscovery, most-played rotation, recently added, older favorites, top songs, decade mixes, and per-artist mixes
 - A similarity-based mix can be generated from any song (artist, genre, album, era, and rating weighting)
 
+**Maintenance tools**
+- Fix All Missing Artwork: batch cover lookup and write for every album that has none
+- Duplicate finder: detects same-song copies and removes the worse one (keeps highest bitrate)
+- Library ↔ iPod diff: see what is on the Mac but not the device (and vice versa) and sync the gap in one click
+- Playlist backup and restore: playlists, smart playlists, and ratings exported to a JSON file and rebuilt on any iPod
+- Filenames like "Artist - Title" or "03 - Title" fill in missing tags automatically during sync
+
+**Insights**
+- Storage bar in the device overview: music, podcasts, audiobooks, video, other, and free space at a glance
+- Listening stats: total plays, listening time, and ranked top songs, artists, and genres from the device's own play counts
+- Menu bar item with device status and quick actions (refresh mixes, sync podcasts, eject)
+
 **Library management**
 - Edit title, artist, album, album artist, genre, composer, year, track number, rating, and artwork on device tracks, including batch edits across a selection
 - Cover-art lookup for tracks missing artwork
@@ -51,6 +63,7 @@ PodSync syncs music, podcasts, audiobooks, and video to click-wheel iPods (Class
   <img src="Screenshots/4.png" width="400" />
   <img src="Screenshots/5.png" width="400" />
   <img src="Screenshots/6.png" width="400" />
+  <img src="Screenshots/7.png" width="400" />
 </p>
 
 ## Requirements
