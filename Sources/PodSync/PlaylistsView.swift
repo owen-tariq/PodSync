@@ -104,6 +104,18 @@ struct DevicePlaylistsView: View {
                 Label("New Smart Playlist", systemImage: "gearshape.2")
             }
             .buttonStyle(.bordered)
+
+            Button {
+                let result = AutoMixApplier.refreshAllMixes(ipodManager: ipodManager)
+                applyResult = result.mixes > 0
+                    ? "Refreshed \(result.mixes) mixes (\(result.tracks) tracks) on iPod"
+                    : "Not enough music on the iPod to build mixes yet (need 10+ songs)"
+            } label: {
+                Label("Refresh Auto Mixes", systemImage: "wand.and.stars")
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(deviceManager.connectedIPod == nil)
+            .help("Builds Spotify-style Daily Mixes, Discovery, Heavy Rotation and Throwback playlists from the music on your iPod")
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -139,6 +151,35 @@ struct DevicePlaylistsView: View {
                             ipodManager.deletePlaylist(id: pl.id)
                             if selectedPlaylistId == pl.id { selectedPlaylistId = nil }
                         }
+                    }
+                }
+            }
+
+            Section("AUTO MIXES (PREVIEW)") {
+                let mixes = AutoMixEngine.generateAll(tracks: ipodManager.deviceTracks)
+                if mixes.isEmpty {
+                    Text("Add 10+ songs to the iPod, then refresh to get Daily Mixes")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                }
+                ForEach(mixes) { mix in
+                    HStack {
+                        Image(systemName: mix.icon)
+                            .foregroundColor(.pink)
+                        VStack(alignment: .leading) {
+                            Text(mix.name)
+                            Text("\(mix.subtitle) · \(mix.tracks.count) tracks")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        Spacer()
+                        Button("Apply") {
+                            let count = AutoMixApplier.apply(mix, to: ipodManager)
+                            applyResult = "\"\(mix.name)\" written to iPod with \(count) tracks"
+                        }
+                        .buttonStyle(.borderless)
+                        .font(.caption)
                     }
                 }
             }

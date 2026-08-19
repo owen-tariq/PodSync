@@ -198,3 +198,128 @@ private let sampleFeed = """
     t.rating = 999
     #expect(t.starRating == 5)
 }
+
+// MARK: - Auto Mix engine
+
+private func makeLibrary() -> [TrackModel] {
+    var tracks: [TrackModel] = []
+    // 20 rock tracks by 4 artists, 15 electronic tracks by 3 artists
+    for i in 1...20 {
+        var t = makeTrack(title: "Rock \(i)", artist: "RockBand \(i % 4)", album: "RockAlbum \(i % 5)",
+                          genre: "Rock", year: 1990 + (i % 20), rating: (i % 6) * 20, playCount: i % 8)
+        t.ipodMediaType = 1
+        tracks.append(t)
+    }
+    for i in 1...15 {
+        var t = makeTrack(title: "Elec \(i)", artist: "DJ \(i % 3)", album: "ElecAlbum \(i % 4)",
+                          genre: "Electronic", year: 2005 + (i % 15), rating: (i % 6) * 20, playCount: i % 5)
+        t.ipodMediaType = 1
+        tracks.append(t)
+    }
+    return tracks
+}
+
+@Test func dailyMixesClusterByGenre() {
+    let mixes = AutoMixEngine.dailyMixes(tracks: makeLibrary(), count: 3, seed: 42)
+    #expect(mixes.count == 2) // two genres -> two mixes
+    #expect(mixes[0].name == "Daily Mix 1")
+    #expect(mixes[0].subtitle == "Rock") // biggest cluster first
+    #expect(mixes[1].subtitle == "Electronic")
+    #expect(!mixes[0].tracks.isEmpty)
+    #expect(mixes[0].tracks.allSatisfy { $0.genre == "Rock" })
+}
+
+@Test func dailyMixesAreDeterministicPerSeed() {
+    let library = makeLibrary()
+    let a = AutoMixEngine.dailyMixes(tracks: library, seed: 7).first!
+    let b = AutoMixEngine.dailyMixes(tracks: library, seed: 7).first!
+    let c = AutoMixEngine.dailyMixes(tracks: library, seed: 8).first!
+    #expect(a.tracks.map(\.displayTitle) == b.tracks.map(\.displayTitle))
+    #expect(a.tracks.map(\.displayTitle) != c.tracks.map(\.displayTitle))
+}
+
+@Test func discoverWeeklyFavorsUnplayed() {
+    var library = makeLibrary()
+    for i in 0..<5 {
+        library[i].playCount = 0
+    }
+    let mix = AutoMixEngine.discoveryMix(tracks: library, size: 10, seed: 1)
+    #expect(mix != nil)
+    #expect(mix!.name == "Discover Weekly")
+    let avgPlays = Double(mix!.tracks.map(\.playCount).reduce(0, +)) / Double(mix!.tracks.count)
+    let libAvg = Double(library.map(\.playCount).reduce(0, +)) / Double(library.count)
+    #expect(avgPlays <= libAvg)
+}
+
+@Test func releaseRadarPrefersRecentlyAdded() {
+    var library = makeLibrary()
+    // Make 6 tracks freshly added, the rest old
+    for i in 0..<library.count {
+        var t = library[i]
+        t.dateAdded = i < 6 ? Date() : Date().addingTimeInterval(-120 * 86400)
+        library[i] = t
+    }
+    let mix = AutoMixEngine.releaseRadar(tracks: library, size: 6, seed: 2)
+    #expect(mix != nil)
+    #expect(mix!.tracks.allSatisfy { $0.dateAdded > Date().addingTimeInterval(-31 * 86400) })
+}
+
+@Test func topSongsAreRankedByLove() {
+    let library = makeLibrary()
+    let mix = AutoMixEngine.topSongsMix(tracks: library, size: 5)
+    #expect(mix != nil)
+    // First track should have max star rating among the picks
+    let ratings = mix!.tracks.map(\.starRating)
+    #expect(ratings.first! >= ratings.last!)
+}
+
+@Test func decadeMixesSplitByDecade() {
+    let mixes = AutoMixEngine.decadeMixes(tracks: makeLibrary(), seed: 3)
+    #expect(!mixes.isEmpty)
+    for mix in mixes {
+        #expect(mix.name.hasSuffix("Mix"))
+        let decades = Set(mix.tracks.map { ($0.yearValue / 10) * 10 })
+        #expect(decades.count == 1) // all tracks from one decade
+    }
+}
+
+@Test func geniusMixLeadsWithSeedAndFindsSimilar() {
+    let library = makeLibrary()
+    let seedTrack = library[0] // Rock track
+    let mix = AutoMixEngine.geniusMix(seed: seedTrack, tracks: library, size: 10, randomSeed: 3)
+    #expect(mix.tracks.first?.id == seedTrack.id)
+    #expect(mix.tracks.count > 1)
+    let sameGenre = mix.tracks.dropFirst().filter { $0.genre == "Rock" }.count
+    #expect(sameGenre >= mix.tracks.dropFirst().count / 2)
+}
+
+@Test func similarityScoring() {
+    let seed = makeTrack(title: "S", artist: "Daft Punk", album: "Discovery", genre: "Electronic", year: 2001)
+    let sameArtist = makeTrack(title: "A", artist: "Daft Punk", album: "Homework", genre: "Electronic", year: 1997)
+    let sameGenreOnly = makeTrack(title: "B", artist: "Justice", album: "Cross", genre: "Electronic", year: 2007)
+    let unrelated = makeTrack(title: "C", artist: "Slayer", album: "Reign", genre: "Metal", year: 1986)
+
+    let a = AutoMixEngine.similarity(seed: seed, candidate: sameArtist)
+    let b = AutoMixEngine.similarity(seed: seed, candidate: sameGenreOnly)
+    let c = AutoMixEngine.similarity(seed: seed, candidate: unrelated)
+    #expect(a > b)
+    #expect(b > c)
+    #expect(c < 0.5)
+}
+
+@Test func weightedShuffleRespectsSeed() {
+    let tracks = (1...30).map { makeTrack(title: "T\($0)") }
+    let a = AutoMixEngine.weightedShuffle(tracks, weight: { _ in 1 }, seed: 5).map(\.displayTitle)
+    let b = AutoMixEngine.weightedShuffle(tracks, weight: { _ in 1 }, seed: 5).map(\.displayTitle)
+    #expect(a == b)
+}
+
+@Test func generateAllProducesFullLineup() {
+    let mixes = AutoMixEngine.generateAll(tracks: makeLibrary(), seed: 11)
+    let names = mixes.map(\.name)
+    #expect(names.contains("Daily Mix 1"))
+    #expect(names.contains("Discover Weekly"))
+    #expect(names.contains("Release Radar"))
+    #expect(names.contains("On Repeat"))
+    #expect(Set(names).count == names.count) // no duplicate playlist names
+}

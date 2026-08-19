@@ -245,6 +245,14 @@ struct DeviceSongsView: View {
                     Label("Edit Info...", systemImage: "pencil")
                 }
 
+                Button {
+                    let mix = AutoMixEngine.geniusMix(seed: track, tracks: ipodManager.deviceTracks)
+                    let count = AutoMixApplier.apply(mix, to: ipodManager)
+                    print("[Genius] Created \(mix.name) with \(count) tracks")
+                } label: {
+                    Label("Genius Mix from This Song", systemImage: "wand.and.stars")
+                }
+
                 addToPlaylistMenu(selection: selection)
 
                 Button {
