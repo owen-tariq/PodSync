@@ -16,7 +16,14 @@ struct DeviceSongsView: View {
     @State private var showDeleteSelectedConfirm = false
     @State private var editingTracks: Set<TrackModel.ID>? = nil
     @State private var showDuplicateFinder = false
+    @State private var showTrash = false
     @StateObject private var artworkFixer = ArtworkFixer.shared
+    @StateObject private var exporter = IPodExporter.shared
+    @State private var searchScope: SearchScope = .all
+
+    enum SearchScope: String, CaseIterable {
+        case all = "All", title = "Title", artist = "Artist", album = "Album", genre = "Genre"
+    }
     @State private var sortOrder: [KeyPathComparator<TrackModel>] = [
         .init(\.displayArtist), .init(\.displayAlbum), .init(\.displayTitle)
     ]
@@ -85,6 +92,17 @@ struct DeviceSongsView: View {
         .sheet(isPresented: $showDuplicateFinder) {
             DuplicateFinderSheet()
         }
+        .sheet(isPresented: $showTrash) {
+            TrashSheet()
+        }
+        .alert("Export", isPresented: Binding(
+            get: { exporter.summary != nil },
+            set: { if !$0 { exporter.summary = nil } }
+        )) {
+            Button("OK") { exporter.summary = nil }
+        } message: {
+            Text(exporter.summary ?? "")
+        }
         .alert("Artwork Fixer", isPresented: Binding(
             get: { artworkFixer.summary != nil },
             set: { if !$0 { artworkFixer.summary = nil } }
@@ -94,7 +112,20 @@ struct DeviceSongsView: View {
             Text(artworkFixer.summary ?? "")
         }
         .overlay {
-            if artworkFixer.isRunning {
+            if exporter.isRunning {
+                ZStack {
+                    Color.black.opacity(0.4)
+                    VStack(spacing: 12) {
+                        ProgressView(value: Double(exporter.progress), total: Double(max(1, exporter.total)))
+                            .frame(width: 220)
+                        Text("Copying to Mac... (\(exporter.progress) / \(exporter.total))").bold()
+                    }
+                    .padding(20)
+                    .background(Color(NSColor.windowBackgroundColor))
+                    .cornerRadius(12)
+                }
+                .ignoresSafeArea()
+            } else if artworkFixer.isRunning {
                 ZStack {
                     Color.black.opacity(0.4)
                     VStack(spacing: 12) {
@@ -160,6 +191,17 @@ struct DeviceSongsView: View {
                         } label: {
                             Label("Find Duplicates...", systemImage: "doc.on.doc")
                         }
+                        Divider()
+                        Button {
+                            exportAllToMac()
+                        } label: {
+                            Label("Export All Music to Mac...", systemImage: "square.and.arrow.up.on.square")
+                        }
+                        Button {
+                            showTrash = true
+                        } label: {
+                            Label("iPod Trash...", systemImage: "trash")
+                        }
                     } label: {
                         Label("Tools", systemImage: "wrench.and.screwdriver")
                     }
@@ -184,7 +226,13 @@ struct DeviceSongsView: View {
                 .buttonStyle(.bordered)
             }
             
-            // Search
+            // Search with scope
+            Picker("", selection: $searchScope) {
+                ForEach(SearchScope.allCases, id: \.self) { scope in
+                    Text(scope.rawValue).tag(scope)
+                }
+            }
+            .frame(width: 84)
             TextField("Search iPod...", text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 180)
@@ -310,6 +358,12 @@ struct DeviceSongsView: View {
                 addToPlaylistMenu(selection: selection)
 
                 Button {
+                    exportToMac(selection: selection)
+                } label: {
+                    Label("Copy to Mac...", systemImage: "square.and.arrow.up")
+                }
+
+                Button {
                     NSWorkspace.shared.selectFile(track.filePath.path, inFileViewerRootedAtPath: track.filePath.deletingLastPathComponent().path)
                 } label: {
                     Label("Show in Finder", systemImage: "folder")
@@ -335,6 +389,12 @@ struct DeviceSongsView: View {
                 }
 
                 addToPlaylistMenu(selection: selection)
+
+                Button {
+                    exportToMac(selection: selection)
+                } label: {
+                    Label("Copy \(selection.count) Tracks to Mac...", systemImage: "square.and.arrow.up")
+                }
 
                 Divider()
 
@@ -406,6 +466,29 @@ struct DeviceSongsView: View {
         }
     }
 
+    // MARK: - Export to Mac
+
+    private func exportToMac(selection: Set<TrackModel.ID>) {
+        let tracks = ipodManager.deviceTracks.filter { selection.contains($0.id) }
+        runExport(tracks: tracks)
+    }
+
+    private func exportAllToMac() {
+        runExport(tracks: filteredTracks)
+    }
+
+    private func runExport(tracks: [TrackModel]) {
+        guard !tracks.isEmpty else { return }
+        let panel = NSOpenPanel()
+        panel.title = "Choose a folder to copy music into"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.prompt = "Export Here"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task { _ = await exporter.export(tracks: tracks, to: url) }
+    }
+
     // MARK: - Playlist menu
 
     @ViewBuilder
@@ -441,10 +524,17 @@ struct DeviceSongsView: View {
         }
         if !searchText.isEmpty {
             tracks = tracks.filter { track in
-                (track.title?.localizedCaseInsensitiveContains(searchText) == true) ||
-                (track.artist?.localizedCaseInsensitiveContains(searchText) == true) ||
-                (track.album?.localizedCaseInsensitiveContains(searchText) == true) ||
-                (track.genre?.localizedCaseInsensitiveContains(searchText) == true)
+                switch searchScope {
+                case .all:
+                    return (track.title?.localizedCaseInsensitiveContains(searchText) == true) ||
+                        (track.artist?.localizedCaseInsensitiveContains(searchText) == true) ||
+                        (track.album?.localizedCaseInsensitiveContains(searchText) == true) ||
+                        (track.genre?.localizedCaseInsensitiveContains(searchText) == true)
+                case .title: return track.title?.localizedCaseInsensitiveContains(searchText) == true
+                case .artist: return track.artist?.localizedCaseInsensitiveContains(searchText) == true
+                case .album: return track.album?.localizedCaseInsensitiveContains(searchText) == true
+                case .genre: return track.genre?.localizedCaseInsensitiveContains(searchText) == true
+                }
             }
         }
         return tracks.sorted(using: sortOrder)

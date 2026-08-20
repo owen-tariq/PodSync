@@ -116,6 +116,12 @@ struct DeviceView: View {
 
             StorageBarView(device: ipod, tracks: deviceManager.ipodManager.deviceTracks)
                 .padding(.horizontal, 40)
+
+            if Rockbox.isInstalled(mountpoint: ipod.mountPath.path) {
+                Label("Rockbox detected — file copies and scrobble-log import available", systemImage: "waveform.path")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+            }
             
             // Progress or Sync Button
             if isSyncing {

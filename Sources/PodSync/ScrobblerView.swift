@@ -3,6 +3,7 @@ import SwiftUI
 struct ScrobblerView: View {
     @EnvironmentObject var scrobblerManager: ScrobblerManager
     @EnvironmentObject var deviceManager: DeviceManager
+    @State private var rockboxImportMessage: String? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -98,6 +99,41 @@ struct ScrobblerView: View {
             .background(Color(NSColor.controlBackgroundColor))
             
             Divider()
+
+            // ListenBrainz + Rockbox row
+            HStack(spacing: 12) {
+                Image(systemName: "brain.head.profile")
+                    .foregroundColor(.orange)
+                SecureField("ListenBrainz token (optional)", text: $scrobblerManager.listenBrainzToken)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 280)
+                Text(scrobblerManager.listenBrainzToken.isEmpty ? "Paste your token from listenbrainz.org/settings" : "ListenBrainz enabled")
+                    .font(.caption)
+                    .foregroundColor(scrobblerManager.listenBrainzToken.isEmpty ? .secondary : .green)
+                Spacer()
+                if let mount = deviceManager.ipodManager.mountpoint,
+                   Rockbox.isInstalled(mountpoint: mount) {
+                    Button {
+                        let count = Rockbox.importScrobbles(mountpoint: mount, into: scrobblerManager)
+                        rockboxImportMessage = count > 0 ? "Imported \(count) Rockbox listens" : "No new Rockbox listens found"
+                    } label: {
+                        Label("Import Rockbox Log", systemImage: "waveform.path")
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            if let message = rockboxImportMessage ?? scrobblerManager.lastSubmissionSummary {
+                Text(message)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
+            }
+
+            Divider()
             
             // List
             if scrobblerManager.pendingScrobbles.isEmpty {
@@ -144,7 +180,7 @@ struct ScrobblerView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Spacer()
-                    Button("Scrobble Now") {
+                    Button(scrobblerManager.pendingScrobbles.contains(where: { $0.trackId == 0 }) ? "Scrobble Now (incl. Rockbox)" : "Scrobble Now") {
                         Task {
                             await scrobblerManager.scrobblePending()
                         }

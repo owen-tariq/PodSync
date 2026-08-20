@@ -119,6 +119,12 @@ struct DevicePlaylistsView: View {
                 } label: {
                     Label("Restore Playlists...", systemImage: "square.and.arrow.up")
                 }
+                Divider()
+                Button {
+                    importM3U()
+                } label: {
+                    Label("Import Playlist from M3U...", systemImage: "doc.badge.plus")
+                }
             } label: {
                 Label("Backup", systemImage: "externaldrive")
             }
@@ -167,6 +173,9 @@ struct DevicePlaylistsView: View {
                         Button("Rename...") {
                             renameText = pl.name
                             renamingPlaylist = pl
+                        }
+                        Button("Export as Files + M3U...") {
+                            exportPlaylist(pl)
                         }
                         Button("Delete Playlist", role: .destructive) {
                             ipodManager.deletePlaylist(id: pl.id)
@@ -256,6 +265,68 @@ struct DevicePlaylistsView: View {
         } else {
             emptyState(icon: "music.note.list", title: "Select a Playlist", message: "Choose a playlist to view and edit its tracks.")
         }
+    }
+
+    private func exportPlaylist(_ pl: PlaylistModel) {
+        let byIpodId = Dictionary(grouping: ipodManager.deviceTracks, by: { $0.ipodTrackId ?? 0 })
+        let tracks = pl.trackIds.compactMap { byIpodId[$0]?.first }
+        guard !tracks.isEmpty else {
+            applyResult = "Playlist is empty."
+            return
+        }
+        let panel = NSOpenPanel()
+        panel.title = "Choose a folder to export the playlist into"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.prompt = "Export Here"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task {
+            await IPodExporter.shared.exportPlaylist(name: pl.name, tracks: tracks, to: url)
+            applyResult = IPodExporter.shared.summary
+        }
+    }
+
+    private func importM3U() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = [.init(filenameExtension: "m3u8") ?? .plainText, .init(filenameExtension: "m3u") ?? .plainText]
+        guard panel.runModal() == .OK, let url = panel.url,
+              let text = try? String(contentsOf: url, encoding: .utf8) else { return }
+
+        let entries = M3U.parse(text)
+        guard !entries.isEmpty else {
+            applyResult = "No entries found in that M3U file."
+            return
+        }
+
+        // Match entries to device tracks by artist+title (loose), else title only
+        var byLoose: [String: TrackModel] = [:]
+        var byTitle: [String: TrackModel] = [:]
+        for track in ipodManager.deviceTracks {
+            byLoose[PlaylistBackup.looseKey(title: track.displayTitle, artist: track.displayArtist)] = track
+            byTitle[DuplicateFinder.normalize(track.displayTitle)] = track
+        }
+        var matchedIds: [UInt32] = []
+        var missing = 0
+        for entry in entries {
+            let track = byLoose[PlaylistBackup.looseKey(title: entry.title, artist: entry.artist)]
+                ?? byTitle[DuplicateFinder.normalize(entry.title)]
+            if let tid = track?.ipodTrackId {
+                matchedIds.append(tid)
+            } else {
+                missing += 1
+            }
+        }
+
+        let name = url.deletingPathExtension().lastPathComponent
+        if ipodManager.playlistNamed(name) == nil {
+            ipodManager.createPlaylist(name: name)
+        }
+        guard let target = ipodManager.playlistNamed(name) else { return }
+        ipodManager.setPlaylistContents(playlistId: target.id, ipodTrackIds: matchedIds)
+        applyResult = "Imported \"\(name)\" with \(matchedIds.count) tracks" + (missing > 0 ? " (\(missing) not on this iPod)" : "")
     }
 
     private func emptyState(icon: String, title: String, message: String) -> some View {

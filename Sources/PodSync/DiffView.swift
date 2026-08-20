@@ -55,6 +55,16 @@ struct DiffView: View {
                     .font(.title)
                     .fontWeight(.bold)
                 Spacer()
+                if let mount = ipodManager.mountpoint, Rockbox.isInstalled(mountpoint: mount) {
+                    Button {
+                        copyMissingToRockbox(mountpoint: mount)
+                    } label: {
+                        Label("Copy as Files (Rockbox)", systemImage: "folder.badge.plus")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(onMacOnly.isEmpty || isSyncing)
+                    .help("Copies the missing tracks unconverted into the Music folder for Rockbox playback")
+                }
                 Button {
                     syncAllMissing()
                 } label: {
@@ -187,6 +197,18 @@ struct DiffView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func copyMissingToRockbox(mountpoint: String) {
+        let tracks = onMacOnly.map { (source: $0.filePath, artist: $0.displayArtist, album: $0.displayAlbum, title: $0.displayTitle) }
+        isSyncing = true
+        Task {
+            let result = await Task.detached(priority: .userInitiated) {
+                Rockbox.copyFiles(tracks: tracks, mountpoint: mountpoint)
+            }.value
+            isSyncing = false
+            statusMessage = "Rockbox: copied \(result.copied) files" + (result.skipped > 0 ? ", \(result.skipped) skipped" : "")
+        }
     }
 
     // MARK: Syncing

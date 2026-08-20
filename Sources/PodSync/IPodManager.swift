@@ -582,17 +582,73 @@ class IPodManager: ObservableObject {
         // Remove from database
         gpod_track_remove(dbRaw, track)
 
-        // Delete from file system
+        // Move the file to the on-device trash instead of deleting it outright,
+        // so accidental deletions are recoverable until the trash is emptied.
         if FileManager.default.fileExists(atPath: trackModel.filePath.path) {
             do {
-                try FileManager.default.removeItem(at: trackModel.filePath)
-                print("[IPodManager] Deleted file: \(trackModel.filePath.path)")
+                if let trashDir = trashDirectory {
+                    try? FileManager.default.createDirectory(at: trashDir, withIntermediateDirectories: true)
+                    let safeName = "\(trackModel.displayArtist) - \(trackModel.displayTitle)"
+                        .components(separatedBy: CharacterSet(charactersIn: "/\\:?%*|\"<>")).joined(separator: "_")
+                    var dest = trashDir.appendingPathComponent(safeName).appendingPathExtension(trackModel.filePath.pathExtension)
+                    var counter = 2
+                    while FileManager.default.fileExists(atPath: dest.path) {
+                        dest = trashDir.appendingPathComponent("\(safeName) \(counter)").appendingPathExtension(trackModel.filePath.pathExtension)
+                        counter += 1
+                    }
+                    try FileManager.default.moveItem(at: trackModel.filePath, to: dest)
+                    print("[IPodManager] Moved to trash: \(dest.lastPathComponent)")
+                } else {
+                    try FileManager.default.removeItem(at: trackModel.filePath)
+                }
             } catch {
-                print("[IPodManager] Failed to delete file: \(error.localizedDescription)")
+                print("[IPodManager] Failed to trash file: \(error.localizedDescription)")
             }
         }
 
         return true
+    }
+
+    // MARK: - iPod Trash
+
+    /// On-device trash folder — deleted tracks live here until emptied.
+    var trashDirectory: URL? {
+        mountpoint.map { URL(fileURLWithPath: $0).appendingPathComponent("iPod_Control/PodSync_Trash", isDirectory: true) }
+    }
+
+    struct TrashItem: Identifiable, Hashable {
+        var id: URL { url }
+        let url: URL
+        let name: String
+        let size: Int64
+        let date: Date
+    }
+
+    func trashItems() -> [TrashItem] {
+        guard let dir = trashDirectory,
+              let contents = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey]) else { return [] }
+        return contents.compactMap { url in
+            let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+            return TrashItem(
+                url: url,
+                name: url.deletingPathExtension().lastPathComponent,
+                size: Int64(values?.fileSize ?? 0),
+                date: values?.contentModificationDate ?? Date()
+            )
+        }.sorted { $0.date > $1.date }
+    }
+
+    /// Permanently delete everything in the trash. Returns freed bytes.
+    @discardableResult
+    func emptyTrash() -> Int64 {
+        let items = trashItems()
+        var freed: Int64 = 0
+        for item in items {
+            if (try? FileManager.default.removeItem(at: item.url)) != nil {
+                freed += item.size
+            }
+        }
+        return freed
     }
 
     /// Delete multiple tracks and save once at the end

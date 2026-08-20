@@ -27,6 +27,12 @@ class ScrobblerManager: ObservableObject {
     @Published var authError: String? = nil
     
     @Published var pendingScrobbles: [PendingScrobble] = []
+    @Published var lastSubmissionSummary: String? = nil
+
+    /// ListenBrainz user token (from listenbrainz.org/settings). Empty = disabled.
+    @Published var listenBrainzToken: String = "" {
+        didSet { UserDefaults.standard.set(listenBrainzToken, forKey: "ListenBrainzToken") }
+    }
     
     // Store last known playcounts in UserDefaults
     private let playcountsKey = "ScrobblerManager_Playcounts"
@@ -44,6 +50,7 @@ class ScrobblerManager: ObservableObject {
         self.apiSecret = Bundle.main.object(forInfoDictionaryKey: "LastFMAPISecret") as? String ?? "a5cee75e84a11bcb2d1c7a02158fe580"
         self.sessionKey = UserDefaults.standard.string(forKey: "LastFMSessionKey")
         self.username = UserDefaults.standard.string(forKey: "LastFMUsername") ?? ""
+        self.listenBrainzToken = UserDefaults.standard.string(forKey: "ListenBrainzToken") ?? ""
     }
     
     func logout() {
@@ -196,6 +203,7 @@ class ScrobblerManager: ObservableObject {
         
         var successCount = 0
         var currentPlaycounts = lastKnownPlaycounts
+        var failedScrobbleIds = Set<UUID>()
         
         for scrobble in pendingScrobbles {
             // We dispatch one scrobble per play count delta
@@ -239,14 +247,64 @@ class ScrobblerManager: ObservableObject {
             if scrobbleSuccess {
                 successCount += 1
                 let idKey = String(scrobble.trackId)
-                currentPlaycounts[idKey] = (currentPlaycounts[idKey] ?? 0) + scrobble.playCountDelta
+                if scrobble.trackId != 0 {
+                    currentPlaycounts[idKey] = (currentPlaycounts[idKey] ?? 0) + scrobble.playCountDelta
+                }
+            } else {
+                failedScrobbleIds.insert(scrobble.id)
             }
         }
         
-        // Update local state
+        // Submit to ListenBrainz too, when a token is configured
+        var lbCount = 0
+        if !listenBrainzToken.isEmpty {
+            lbCount = await submitToListenBrainz(pendingScrobbles)
+        }
+
+        // Update local state — keep FAILED scrobbles in the queue for retry
         lastKnownPlaycounts = currentPlaycounts
-        pendingScrobbles.removeAll()
+        let failedIds = failedScrobbleIds
+        let failed = pendingScrobbles.filter { failedIds.contains($0.id) }
+        pendingScrobbles = failed
+        var summary = "Last.fm: \(successCount) submitted"
+        if !failed.isEmpty { summary += ", \(failed.count) failed (kept for retry)" }
+        if lbCount > 0 { summary += " · ListenBrainz: \(lbCount) listens" }
+        lastSubmissionSummary = summary
         isAuthenticating = false
+    }
+
+    /// Submit listens to ListenBrainz. Returns the number of accepted listens.
+    private func submitToListenBrainz(_ scrobbles: [PendingScrobble]) async -> Int {
+        var listens: [[String: Any]] = []
+        for scrobble in scrobbles {
+            for offset in 0..<max(1, scrobble.playCountDelta) {
+                listens.append([
+                    "listened_at": Int(scrobble.lastPlayedTime.timeIntervalSince1970) - (offset * 180),
+                    "track_metadata": [
+                        "artist_name": scrobble.artist,
+                        "track_name": scrobble.title
+                    ]
+                ])
+            }
+        }
+        guard !listens.isEmpty else { return 0 }
+
+        // ListenBrainz caps payloads; send in chunks
+        var accepted = 0
+        for chunk in stride(from: 0, to: listens.count, by: 100).map({ Array(listens[$0..<min($0 + 100, listens.count)]) }) {
+            let body: [String: Any] = ["listen_type": "import", "payload": chunk]
+            guard let data = try? JSONSerialization.data(withJSONObject: body) else { continue }
+            var request = URLRequest(url: URL(string: "https://api.listenbrainz.org/1/submit-listens")!)
+            request.httpMethod = "POST"
+            request.setValue("Token \(listenBrainzToken)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = data
+            if let (_, response) = try? await URLSession.shared.data(for: request),
+               let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                accepted += chunk.count
+            }
+        }
+        return accepted
     }
     
     private func generateSignature(for params: [String: String], secret: String) -> String {

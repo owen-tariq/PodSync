@@ -400,3 +400,56 @@ private func makeLibrary() -> [TrackModel] {
     #expect(result.missing.count == 1)
     #expect(result.missing[0].title == "Gone")
 }
+
+// MARK: - M3U
+
+@Test func m3uGenerateAndParseRoundTrip() {
+    let entries = [
+        M3U.Entry(seconds: 215, artist: "Daft Punk", title: "One More Time", path: "Daft Punk/Discovery/01 One More Time.mp3"),
+        M3U.Entry(seconds: 320, artist: "Queen", title: "Bohemian Rhapsody", path: "Queen/A Night at the Opera/11 Bohemian Rhapsody.m4a")
+    ]
+    let text = M3U.generate(entries: entries)
+    #expect(text.hasPrefix("#EXTM3U"))
+    let parsed = M3U.parse(text)
+    #expect(parsed == entries)
+}
+
+@Test func m3uParsesPlainPathLists() {
+    let text = "song one.mp3\nfolder/song two.mp3\n"
+    let parsed = M3U.parse(text)
+    #expect(parsed.count == 2)
+    #expect(parsed[0].title == "song one")
+    #expect(parsed[1].path == "folder/song two.mp3")
+}
+
+// MARK: - Rockbox scrobbler log
+
+@Test func rockboxLogParsesListenedOnly() {
+    let log = """
+    #AUDIOSCROBBLER/1.1
+    #TZ/UNKNOWN
+    Daft Punk\tDiscovery\tOne More Time\t1\t320\tL\t1755500000
+    Queen\tOpera\tSkipped Song\t2\t180\tS\t1755500100
+    Adele\t25\tHello\t1\t295\tL\t1755500200\tmbid-123
+    """
+    let entries = Rockbox.parseScrobblerLog(log)
+    #expect(entries.count == 2)
+    #expect(entries[0].title == "One More Time")
+    #expect(entries[1].artist == "Adele")
+    #expect(entries[0].timestamp == Date(timeIntervalSince1970: 1755500000))
+}
+
+@Test func rockboxLogIgnoresMalformedLines() {
+    let log = "not\ta\tvalid\tline\nAnother bad line\n"
+    #expect(Rockbox.parseScrobblerLog(log).isEmpty)
+}
+
+// MARK: - Export paths
+
+@Test func exporterBuildsSafeRelativePaths() {
+    var t = makeTrack(title: "AC/DC: Live?", artist: "AC/DC", album: "Who Made Who")
+    t.trackNumber = 3
+    let rel = IPodExporter.relativePath(for: t)
+    #expect(!rel.contains("?"))
+    #expect(rel.hasPrefix("AC_DC/Who Made Who/03 "))
+}
