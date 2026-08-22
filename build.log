@@ -1,0 +1,41 @@
+Building for production...
+[0/6] Write sources
+[1/6] Write swift-version--79AA4F9932D1E87A.txt
+[2/6] Compiling CLibGPod shim.c
+[3/6] Compiling CLibGPod wrappers.c
+[5/7] Compiling PodSync AlbumGridView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[5/7] Write Objects.LinkFileList
+ld: warning: duplicate -rpath '@executable_path/../Frameworks' ignored
+[6/7] Linking PodSync
+Build complete! (28.31s)

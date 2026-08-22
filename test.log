@@ -1,0 +1,485 @@
+Building for debugging...
+[0/13] Write sources
+[0/13] /Users/runner/work/PodSync/PodSync/.build/arm64-apple-macosx/debug/PodSyncPackageTests.derived/runner.swift
+[0/13] Write sources
+[3/13] Write PodSync-entitlement.plist
+[4/13] Write sources
+[5/13] Compiling CLibGPod shim.c
+[6/13] Write swift-version--79AA4F9932D1E87A.txt
+[7/13] Compiling CLibGPod wrappers.c
+[9/38] Compiling PodSync AlbumGridView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[10/38] Compiling PodSync AppInfo.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[11/38] Compiling PodSync ArtworkCache.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[12/38] Compiling PodSync ArtworkFetcher.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[13/38] Compiling PodSync ArtworkFixer.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[14/38] Compiling PodSync AudioConverter.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[15/38] Compiling PodSync AudioMetadata.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[16/38] Compiling PodSync AudioPlayerManager.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[17/38] Compiling PodSync AutoMix.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[18/38] Compiling PodSync DeviceAlbumsView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[19/38] Compiling PodSync DeviceArtistsView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[20/38] Compiling PodSync DeviceManager.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:155:30: warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+153 |     nonisolated static func extractArtwork(from url: URL) -> NSImage? {
+154 |         let asset = AVAsset(url: url)
+155 |         let metadata = asset.commonMetadata
+    |                              `- warning: 'commonMetadata' was deprecated in macOS 13.0: Use load(.commonMetadata) instead
+156 |         
+157 |         let artworkItems = AVMetadataItem.metadataItems(from: metadata, withKey: AVMetadataKey.commonKeyArtwork, keySpace: .common)
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:162:35: warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+160 |         
+161 |         // Try to get Data from the artwork item
+162 |         if let data = artworkItem.dataValue {
+    |                                   `- warning: 'dataValue' was deprecated in macOS 13.0: Use load(.dataValue) instead
+163 |             return NSImage(data: data)
+164 |         }
+
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/ArtworkCache.swift:167:36: warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+165 |         
+166 |         // Fallback: some formats store artwork as value
+167 |         if let value = artworkItem.value {
+    |                                    `- warning: 'value' was deprecated in macOS 13.0: Use load(.value) instead
+168 |             if let data = value as? Data {
+169 |                 return NSImage(data: data)
+[21/38] Compiling PodSync DeviceSongsView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[22/38] Compiling PodSync DeviceView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[23/38] Compiling PodSync DiffView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[24/38] Compiling PodSync DuplicateFinder.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[25/38] Compiling PodSync EditTrackSheet.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[26/38] Compiling PodSync FilenameTagParser.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[27/38] Compiling PodSync IPodDropTargetModifier.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[28/38] Compiling PodSync IPodManager.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[29/38] Compiling PodSync InspectorView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[30/38] Compiling PodSync LibraryManager.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[31/38] Compiling PodSync PlaylistBackup.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[32/38] Compiling PodSync PlaylistsView.swift
+/Users/runner/work/PodSync/PodSync/Sources/PodSync/IPodDropTargetModifier.swift:316:62: warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+314 |         if meta.duration == 0 {
+315 |             let targetAsset = AVAsset(url: url)
+316 |             let assetDuration = CMTimeGetSeconds(targetAsset.duration)
+    |                                                              `- warning: 'duration' was deprecated in macOS 13.0: Use load(.duration) instead
+317 |             if !assetDuration.isNaN && !assetDuration.isInfinite {
+318 |                 meta.duration = assetDuration
+[33/38] Emitting module PodSync
+[34/50] Compiling PodSync PodSync.swift
+[35/50] Compiling PodSync PodcastManager.swift
+[36/50] Compiling PodSync PodcastModels.swift
+[37/50] Compiling PodSync PodcastsView.swift
+[38/50] Compiling PodSync ScrobblerManager.swift
+[39/50] Compiling PodSync ScrobblerView.swift
+[40/50] Compiling PodSync SettingsView.swift
+[41/50] Compiling PodSync SmartPlaylist.swift
+[42/50] Compiling PodSync StatsView.swift
+[43/50] Compiling PodSync StorageBarView.swift
+[44/50] Compiling PodSync TrackListView.swift
+[45/50] Compiling PodSync TrackModel.swift
+[45/50] Write Objects.LinkFileList
+ld: warning: duplicate -rpath '@executable_path/../Frameworks' ignored
+[46/50] Linking PodSync
+[47/50] Applying PodSync
+[49/52] Emitting module PodSyncTests
+[50/52] Compiling PodSyncTests PodSyncTests.swift
+[51/54] Emitting module PodSyncPackageTests
+[52/54] Compiling PodSyncPackageTests runner.swift
+[52/54] Write Objects.LinkFileList
+ld: warning: duplicate -rpath '@executable_path/../Frameworks' ignored
+[53/54] Linking PodSyncPackageTests
+Build complete! (25.03s)
+Test Suite 'All tests' started at 2026-08-22 00:10:03.325.
+Test Suite 'All tests' passed at 2026-08-22 00:10:03.327.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+◇ Test run started.
+↳ Testing Library Version: 124.4
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test decadeMixesSplitByDecade() started.
+◇ Test duplicateFinderIgnoresPodcasts() started.
+◇ Test rssParserRejectsGarbage() started.
+◇ Test generateAllProducesFullLineup() started.
+◇ Test weightedShuffleRespectsSeed() started.
+◇ Test smartPlaylistEmptyRulesMatchesEverything() started.
+◇ Test durationParsing() started.
+◇ Test geniusMixLeadsWithSeedAndFindsSimilar() started.
+◇ Test conversionClassification() started.
+◇ Test smartRuleNumericComparisons() started.
+◇ Test dailyMixesAreDeterministicPerSeed() started.
+◇ Test dailyMixesClusterByGenre() started.
+◇ Test rssParserExtractsShowAndEpisodes() started.
+◇ Test playlistBackupMatchesExactThenLoose() started.
+◇ Test retentionKeepsNewestEpisodes() started.
+◇ Test discoverWeeklyFavorsUnplayed() started.
+◇ Test retentionNoRemovalWhenUnderLimit() started.
+◇ Test similarityScoring() started.
+◇ Test artworkResizerKeepsSmallImages() started.
+◇ Test retentionTreatsUndatedAsOldest() started.
+◇ Test rfc822DateParsing() started.
+◇ Test duplicateFinderGroupsSameSongs() started.
+◇ Test smartPlaylistLimitAndSort() started.
+◇ Test smartRuleContainsMatchesCaseInsensitive() started.
+◇ Test artworkResizerZeroMeansOriginal() started.
+◇ Test filenameParserPatterns() started.
+◇ Test topSongsAreRankedByLove() started.
+◇ Test releaseRadarPrefersRecentlyAdded() started.
+◇ Test trackModelStarRating() started.
+◇ Test smartPlaylistMatchAllVsAny() started.
+✔ Test duplicateFinderIgnoresPodcasts() passed after 0.009 seconds.
+✔ Test decadeMixesSplitByDecade() passed after 0.009 seconds.
+✔ Test rssParserRejectsGarbage() passed after 0.009 seconds.
+✔ Test weightedShuffleRespectsSeed() passed after 0.009 seconds.
+✔ Test durationParsing() passed after 0.009 seconds.
+✔ Test geniusMixLeadsWithSeedAndFindsSimilar() passed after 0.009 seconds.
+✔ Test conversionClassification() passed after 0.009 seconds.
+✔ Test smartRuleNumericComparisons() passed after 0.009 seconds.
+✔ Test dailyMixesClusterByGenre() passed after 0.009 seconds.
+✔ Test dailyMixesAreDeterministicPerSeed() passed after 0.009 seconds.
+✔ Test smartPlaylistEmptyRulesMatchesEverything() passed after 0.009 seconds.
+✔ Test playlistBackupMatchesExactThenLoose() passed after 0.009 seconds.
+✔ Test retentionKeepsNewestEpisodes() passed after 0.009 seconds.
+✔ Test discoverWeeklyFavorsUnplayed() passed after 0.009 seconds.
+✔ Test retentionNoRemovalWhenUnderLimit() passed after 0.009 seconds.
+✔ Test similarityScoring() passed after 0.009 seconds.
+✔ Test generateAllProducesFullLineup() passed after 0.009 seconds.
+✔ Test retentionTreatsUndatedAsOldest() passed after 0.009 seconds.
+✔ Test rfc822DateParsing() passed after 0.009 seconds.
+✔ Test rssParserExtractsShowAndEpisodes() passed after 0.009 seconds.
+✔ Test duplicateFinderGroupsSameSongs() passed after 0.009 seconds.
+✔ Test smartPlaylistLimitAndSort() passed after 0.009 seconds.
+✔ Test smartRuleContainsMatchesCaseInsensitive() passed after 0.009 seconds.
+✔ Test artworkResizerZeroMeansOriginal() passed after 0.009 seconds.
+✔ Test topSongsAreRankedByLove() passed after 0.009 seconds.
+✔ Test releaseRadarPrefersRecentlyAdded() passed after 0.009 seconds.
+✔ Test trackModelStarRating() passed after 0.009 seconds.
+✔ Test smartPlaylistMatchAllVsAny() passed after 0.009 seconds.
+✔ Test filenameParserPatterns() passed after 0.010 seconds.
+✔ Test artworkResizerKeepsSmallImages() passed after 0.010 seconds.
+✔ Test run with 30 tests passed after 0.010 seconds.
