@@ -2,6 +2,13 @@
   <img src="logo.png" alt="PodSync" width="160" />
   <h1>PodSync</h1>
   <p>A native macOS application for managing classic iPods without iTunes.</p>
+
+  <p>
+    <a href="https://github.com/owen-tariq/PodSync/releases/latest"><img src="https://img.shields.io/github/v/release/owen-tariq/PodSync?style=flat-square&label=release&color=6f7bf7" alt="Latest release" /></a>
+    <a href="https://github.com/owen-tariq/PodSync/releases"><img src="https://img.shields.io/github/downloads/owen-tariq/PodSync/total?style=flat-square&label=downloads&color=41c7a5" alt="Total downloads" /></a>
+    <a href="https://github.com/owen-tariq/PodSync/stargazers"><img src="https://img.shields.io/github/stars/owen-tariq/PodSync?style=flat-square&label=stars&color=e3b341" alt="Stars" /></a>
+    <a href="https://github.com/owen-tariq/PodSync/actions"><img src="https://img.shields.io/github/actions/workflow/status/owen-tariq/PodSync/build.yml?style=flat-square&label=build" alt="Build status" /></a>
+  </p>
 </div>
 
 **Website: [owen-tariq.github.io/PodSync](https://owen-tariq.github.io/PodSync/)** · [Download](https://github.com/owen-tariq/PodSync/releases/latest)
