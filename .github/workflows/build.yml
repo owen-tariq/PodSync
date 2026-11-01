@@ -11,60 +11,98 @@ permissions:
 
 jobs:
   build:
-    name: Build, Test & Package (macOS)
-    runs-on: macos-15
+    name: Build & Test (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+            dmg: PodSync.dmg
+          - arch: x86_64
+            runner: macos-15-intel
+            dmg: PodSync-Intel.dmg
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Swift version
-        run: swift --version
+      - name: Verify native frameworks support target architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          for framework in Frameworks/*.framework; do
+            name="$(basename "$framework" .framework)"
+            binary="$framework/$name"
+            if [[ ! -f "$binary" ]]; then
+              echo "::error::Missing framework binary: $binary"
+              exit 1
+            fi
+            supported="$(lipo -archs "$binary")"
+            echo "$name supports: $supported"
+            if ! echo " $supported " | grep -q " ${{ matrix.arch }} "; then
+              echo "::error::$name lacks ${{ matrix.arch }} support. Rebuild the framework for ${{ matrix.arch }} before publishing."
+              exit 1
+            fi
+          done
 
-      - name: Build (release)
+      - name: Build release
         run: |
           set -o pipefail
-          swift build -c release 2>&1 | tee build.log
+          swift build -c release --arch ${{ matrix.arch }} 2>&1 | tee build.log
 
       - name: Run tests
         run: |
           set -o pipefail
-          swift test 2>&1 | tee test.log
+          swift test --arch ${{ matrix.arch }} 2>&1 | tee test.log
 
       - name: Package PodSync.app
         run: CI=1 bash build_app.sh
+
+      - name: Verify packaged executable architecture
+        run: |
+          lipo -verify_arch ${{ matrix.arch }} PodSync.app/Contents/MacOS/PodSync
+          test "$(uname -m)" = "${{ matrix.arch }}"
 
       - name: Create DMG
         run: |
           mkdir -p dist/dmg
           cp -R PodSync.app dist/dmg/
           ln -s /Applications dist/dmg/Applications
-          hdiutil create -volname "PodSync" -srcfolder dist/dmg -ov -format UDZO dist/PodSync.dmg
+          hdiutil create -volname "PodSync" -srcfolder dist/dmg -ov -format UDZO "dist/${{ matrix.dmg }}"
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PodSync-dmg
-          path: dist/PodSync.dmg
+          name: PodSync-dmg-${{ matrix.arch }}
+          path: dist/${{ matrix.dmg }}
+          if-no-files-found: error
 
       - name: Upload app bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PodSync-app
+          name: PodSync-app-${{ matrix.arch }}
           path: PodSync.app
 
-      - name: Publish logs to ci-logs branch
-        if: always()
+  publish:
+    name: Update v2.3.0 release
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download both DMGs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: PodSync-dmg-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish both architectures without overwriting the wrong asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          mkdir -p /tmp/cilogs
-          cp build.log /tmp/cilogs/ 2>/dev/null || true
-          cp test.log /tmp/cilogs/ 2>/dev/null || true
-          cd /tmp/cilogs
-          git init -q -b ci-logs
-          git config user.email "ci@podsync"
-          git config user.name "PodSync CI"
-          echo "run: ${{ github.run_id }}" > meta.txt
-          echo "sha: ${{ github.sha }}" >> meta.txt
-          echo "conclusion: ${{ job.status }}" >> meta.txt
-          git add -A
-          git commit -q -m "logs for run ${{ github.run_id }} (${{ job.status }})"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-logs:ci-logs
+          set -euo pipefail
+          test -s dist/PodSync.dmg
+          test -s dist/PodSync-Intel.dmg
+          gh release upload v2.3.0 dist/PodSync.dmg dist/PodSync-Intel.dmg --clobber
