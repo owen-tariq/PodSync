@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Verify native frameworks support target architecture
         shell: bash
@@ -61,7 +61,7 @@ jobs:
 
       - name: Verify packaged executable architecture
         run: |
-          lipo -verify_arch ${{ matrix.arch }} PodSync.app/Contents/MacOS/PodSync
+          lipo PodSync.app/Contents/MacOS/PodSync -verify_arch ${{ matrix.arch }}
           test "$(uname -m)" = "${{ matrix.arch }}"
 
       - name: Create DMG
@@ -72,14 +72,14 @@ jobs:
           hdiutil create -volname "PodSync" -srcfolder dist/dmg -ov -format UDZO "dist/${{ matrix.dmg }}"
 
       - name: Upload DMG artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: PodSync-dmg-${{ matrix.arch }}
           path: dist/${{ matrix.dmg }}
           if-no-files-found: error
 
       - name: Upload app bundle artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: PodSync-app-${{ matrix.arch }}
           path: PodSync.app
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download both DMGs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: PodSync-dmg-*
           path: dist
