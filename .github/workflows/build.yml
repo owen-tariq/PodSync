@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - arch: arm64
-            runner: macos-15-arm64
+            runner: macos-15
             dmg: PodSync.dmg
           - arch: x86_64
             runner: macos-15-intel
@@ -84,25 +84,15 @@ jobs:
           name: PodSync-app-${{ matrix.arch }}
           path: PodSync.app
 
-  publish:
-    name: Update v2.3.0 release
-    needs: build
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download both DMGs
-        uses: actions/download-artifact@v5
-        with:
-          pattern: PodSync-dmg-*
-          path: dist
-          merge-multiple: true
-
-      - name: Publish both architectures without overwriting the wrong asset
+      # Each architecture publishes its own distinct asset after its own tests.
+      # An unavailable runner for one architecture must not block the other.
+      - name: Publish ${{ matrix.dmg }} to v2.3.0
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          test -s dist/PodSync.dmg
-          test -s dist/PodSync-Intel.dmg
-          gh release upload v2.3.0 dist/PodSync.dmg dist/PodSync-Intel.dmg --clobber
+          test -s "dist/${{ matrix.dmg }}"
+          gh release upload v2.3.0 "dist/${{ matrix.dmg }}" --clobber
+          echo "Published ${{ matrix.dmg }} to v2.3.0"
