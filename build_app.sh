@@ -75,7 +75,7 @@ if [ -n "$CI" ] && [ "${GITHUB_REF:-}" = "refs/heads/main" ] && [ -f scripts/ref
 fi
 
 # --- CI on main: build DMG and publish/update the GitHub release ---
-if [ -n "$CI" ] && [ "${GITHUB_REF:-}" = "refs/heads/main" ]; then
+if [ -n "$CI" ] && [ "${PUBLISH_RELEASE_FROM_SCRIPT:-0}" = "1" ] && [ "${GITHUB_REF:-}" = "refs/heads/main" ]; then
     echo "Building release DMG..."
     rm -rf release_dist
     mkdir -p release_dist/dmg
